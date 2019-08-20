@@ -77,8 +77,6 @@ def main():
             j += 1
 
 
-
-
 if __name__ == '__main__':
     shutil.rmtree(PATH_DATA_GENERATED_HANZI, ignore_errors=True)
     PATH_DATA_GENERATED_HANZI.mkdir(parents=True, exist_ok=True)

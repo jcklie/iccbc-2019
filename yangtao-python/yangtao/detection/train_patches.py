@@ -1,73 +1,83 @@
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
+from tensorflow.python.keras import optimizers
 from tensorflow.python.keras.callbacks import EarlyStopping
 
-from yangtao.config import PATH_DATA_RESULTS, PATH_DATA_GENERATED_HANZI
+from yangtao.config import *
 
 PATH_DATA_RESULTS.mkdir(parents=True, exist_ok=True)
 
-DATA_TRAIN_DIR = PATH_DATA_GENERATED_HANZI
+DATA_TRAIN_DIR = PATH_DATA_GENERATED_SPCCI_120_TRAIN
+DATA_VALID_DIR = PATH_DATA_GENERATED_SPCCI_120_TEST
+
+print(f"Train: {DATA_TRAIN_DIR}")
+print(f"Valid: {DATA_VALID_DIR}")
 
 IMAGE_SIZE = 96
 BATCH_SIZE = 64
-IMG_SHAPE = (IMAGE_SIZE, IMAGE_SIZE, 1)
+IMG_SHAPE = (IMAGE_SIZE, IMAGE_SIZE, 3)
+EPOCHS = 2
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+def preprocess(X):
+    return X
 
 datagen = tf.keras.preprocessing.image.ImageDataGenerator(
     preprocessing_function=tf.keras.applications.mobilenet_v2.preprocess_input,
-    validation_split=0.2,
-    rotation_range=5,
-    shear_range=0.01,)
+    # rotation_range=5,
+    # shear_range=0.01,
+)
 
 train_generator = datagen.flow_from_directory(
     DATA_TRAIN_DIR,
     target_size=(IMAGE_SIZE, IMAGE_SIZE),
     batch_size=BATCH_SIZE,
-    color_mode="grayscale",
-    subset='training')
+    #color_mode="grayscale")
+)
 
 val_generator = datagen.flow_from_directory(
-    DATA_TRAIN_DIR,
+    DATA_VALID_DIR,
     target_size=(IMAGE_SIZE, IMAGE_SIZE),
     batch_size=BATCH_SIZE,
-    color_mode="grayscale",
-    subset='validation')
+    #color_mode="grayscale")
+)
 
 labels = '\n'.join(sorted(train_generator.class_indices.keys()))
 number_of_classes = len(train_generator.class_indices)
+print(f"Number of classes: {number_of_classes}")
 
 with open(PATH_DATA_RESULTS / 'labels.txt', 'w') as f:
   f.write(labels)
 
 
-# Create the base model from the pre-trained model MobileNet V2
-base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
-                                              include_top=False,
-                                               weights=None,
-                                               alpha=0.75)
+base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE, include_top=True, classes=number_of_classes, weights=None)
 
+# base_model.trainable = False
+
+"""
 model = tf.keras.Sequential([
   base_model,
-  # tf.keras.layers.Conv2D(32, 3, activation='relu'),
+  tf.keras.layers.Conv2D(32, 3, activation='relu'),
   tf.keras.layers.Dropout(0.5),
   tf.keras.layers.GlobalAveragePooling2D(),
   tf.keras.layers.Dense(number_of_classes, activation='softmax')
 ])
+"""
 
-
-# model = cnn_indian()
-model.compile(optimizer=tf.keras.optimizers.Adam(),
+model = base_model
+model.compile(optimizer='rmsprop',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
-
-epochs = 100
 
 earlystop_callback = EarlyStopping(
   monitor='val_accuracy', min_delta=0.0001,
   patience=5)
 
 history = model.fit(train_generator,
-                    epochs=epochs,
+                    epochs=EPOCHS,
                     verbose=1,
                     validation_data=val_generator,
                     callbacks=[earlystop_callback])
