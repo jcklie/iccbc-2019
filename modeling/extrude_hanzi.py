@@ -21,7 +21,7 @@ for i, path in enumerate(os.listdir(PATH_SVG_SOURCE)):
         continue
 
     source_path = os.path.join(PATH_SVG_SOURCE, path)
-    target_path = os.path.join(PATH_MODEL_TARGET, path.replace(".svg", ".obj"))
+    target_path = os.path.join(PATH_MODEL_TARGET, path.replace(".svg", ".fbx"))
 
     C = bpy.context
     names_pre_import = set([ o.name for o in C.scene.objects ])
@@ -37,6 +37,6 @@ for i, path in enumerate(os.listdir(PATH_SVG_SOURCE)):
 
     bpy.context.view_layer.objects.active = bpy.data.objects["Curve"]
 
-    bpy.ops.export_scene.obj(filepath=target_path,check_existing=True, axis_forward='Y', axis_up='Z', use_selection=False)
+    bpy.ops.export_scene.fbx(filepath=target_path,check_existing=True, axis_forward='Y', axis_up='Z', use_selection=False)
     bpy.ops.object.select_by_type(type='CURVE')
     bpy.ops.object.delete()
