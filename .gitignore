@@ -340,3 +340,6 @@ fabric.properties
 data/*
 .vscode/*
 .idea/
+
+models/
+svg/
