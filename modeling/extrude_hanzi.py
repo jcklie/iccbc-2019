@@ -4,11 +4,20 @@ import logging
 
 bpy.ops.object.delete(use_global=False)
 
-PATH_SVG_SOURCE = "/home/klie/git/yangtao/modeling/svg"
-PATH_MODEL_TARGET = "/home/klie/git/yangtao/modeling/models"
+PATH_SVG_SOURCE = "svg"
+PATH_MODEL_TARGET = "models"
+PATH_LABELS = "labels.txt"
+
+with open(PATH_LABELS) as f:
+    labels = {x.strip() for x in f.readlines()}
 
 for i, path in enumerate(os.listdir(PATH_SVG_SOURCE)):
     if not path.endswith(".svg"):
+        continue
+
+    label = os.path.splitext(path)[0]
+
+    if label not in labels:
         continue
 
     source_path = os.path.join(PATH_SVG_SOURCE, path)
@@ -28,9 +37,6 @@ for i, path in enumerate(os.listdir(PATH_SVG_SOURCE)):
 
     bpy.context.view_layer.objects.active = bpy.data.objects["Curve"]
 
-    bpy.ops.export_scene.obj(filepath=target_path,check_existing=True, axis_forward='Y', axis_up='Z', filter_glob="*.3ds", use_selection=False)
+    bpy.ops.export_scene.obj(filepath=target_path,check_existing=True, axis_forward='Y', axis_up='Z', use_selection=False)
     bpy.ops.object.select_by_type(type='CURVE')
     bpy.ops.object.delete()
-
-    if i > 100:
-        break
