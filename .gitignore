@@ -342,3 +342,4 @@ data/*
 .idea/
 
 *.sfb
+venv_linux/*
