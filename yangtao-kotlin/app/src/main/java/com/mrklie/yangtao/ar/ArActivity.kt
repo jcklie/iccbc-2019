@@ -17,7 +17,6 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 
 
-
 class ArActivity : AppCompatActivity() {
 
     private lateinit var arFragment: ArFragment
@@ -34,24 +33,19 @@ class ArActivity : AppCompatActivity() {
             .setSource(this, Uri.parse("发.sfb"))
             .build()
             .thenAccept({ renderable -> andyRenderable = renderable })
-            .exceptionally(
-                { throwable ->
-                    val toast =
-                        Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG)
-                    toast.setGravity(Gravity.CENTER, 0, 0)
-                    toast.show()
-                    null
-                })
+            .exceptionally {
+                val toast =
+                    Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG)
+                toast.setGravity(Gravity.CENTER, 0, 0)
+                toast.show()
+                null
+            }
 
         createTapListener()
     }
 
     private fun createTapListener() {
-        arFragment.setOnTapArPlaneListener { hitResult, plane, motionEvent ->
-            if (andyRenderable == null) {
-                return@setOnTapArPlaneListener
-            }
-
+        arFragment.setOnTapArPlaneListener { hitResult, _, _ ->
             // Create the Anchor.
             val anchor = hitResult.createAnchor()
             val anchorNode = AnchorNode(anchor)

@@ -31,6 +31,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".tutorial.ColorBlobDetectionActivity" />
         <!--
  Indicates that app requires ARCore ("AR Required"). Causes the Google
              Play Store to download and install Google Play Services for AR along
