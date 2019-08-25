@@ -341,6 +341,4 @@ data/*
 .vscode/*
 .idea/
 
-models/
-svg/
-sampledata/
+*.sfb
