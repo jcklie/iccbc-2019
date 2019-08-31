@@ -13,7 +13,10 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.ar.core.*
+import com.google.ar.core.Config
+import com.google.ar.core.Plane
+import com.google.ar.core.Session
+import com.google.ar.core.TrackingState
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
@@ -22,12 +25,9 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.mrklie.yangtao.R
 import com.quickbirdstudios.yuv2mat.Yuv
-import com.quickbirdstudios.yuv2mat.YuvImage
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
-import org.opencv.core.Point
-import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.*
 import java.util.*
 import kotlin.math.min
@@ -168,6 +168,8 @@ class ArActivity : AppCompatActivity() {
             val border = longest_side * 0.0
             val size = longest_side - border
             val roi = Rect(Point(height - longest_side + border, width - longest_side + border), Size(size, size))
+
+            // val yuv = YuvImage(image).clip(left=20, top=20, right=40, bottom=40)
 
             val mat_raw = Yuv.rgb(image)
 
