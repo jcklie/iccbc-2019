@@ -20,7 +20,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ar.ArActivity"></activity>
+        <activity
+            android:name="com.mrklie.yangtao.hanzidetail.HanziDetailActivity"
+            android:label="@string/title_activity_hanzi_detail"
+            android:parentActivityName=".hanzigrid.HanziGridActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.mrklie.yangtao.hanzigrid.HanziGridActivity" />
+        </activity>
+        <activity android:name=".ar.ArActivity" />
         <activity
             android:name=".hanzigrid.HanziGridActivity"
             android:label="@string/app_name"

@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:padding="4dp"
         android:layout_margin="4dp">
 
         <LinearLayout
@@ -32,7 +33,7 @@
                 android:layout_height="match_parent"
                 android:fontFamily="@font/noto_sans"
                 android:gravity="center_horizontal"
-                android:textSize="25sp"
+                android:textSize="20sp"
                 tools:text="hàn" />
 
         </LinearLayout>
