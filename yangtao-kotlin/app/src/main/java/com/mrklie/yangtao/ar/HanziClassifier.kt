@@ -74,7 +74,7 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         interpreter.run(input, outputArray)
 
 
-        return getTop10Predictions(outputArray[0]).joinToString(" ")
+        return getTop10Predictions(outputArray[0]).joinToString("")
     }
 
     fun getTop10Predictions(probabilities: FloatArray): List<String> {

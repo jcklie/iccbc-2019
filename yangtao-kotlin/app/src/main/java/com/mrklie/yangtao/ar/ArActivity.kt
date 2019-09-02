@@ -7,16 +7,12 @@ import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.ar.core.Config
-import com.google.ar.core.Plane
-import com.google.ar.core.Session
-import com.google.ar.core.TrackingState
+import com.google.ar.core.*
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
@@ -28,6 +24,7 @@ import com.quickbirdstudios.yuv2mat.Yuv
 import kotlinx.android.synthetic.main.activity_ar.*
 import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc.*
 import java.util.*
 import kotlin.math.max
@@ -41,10 +38,11 @@ class ArActivity : AppCompatActivity() {
 
     private lateinit var scanButton: FloatingActionButton
 
-    private lateinit var andyRenderable: ModelRenderable
     private lateinit var cameraManager: CameraManager
 
     private lateinit var classifier: HanziClassifier
+    private var displayWidth: Int? = 0
+    private var displayHeight: Int? = 0
 
     private var arSession: Session? = null
 
@@ -64,19 +62,11 @@ class ArActivity : AppCompatActivity() {
 
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
 
-        ModelRenderable.builder()
-            .setSource(this, Uri.parse("models/发.sfb"))
-            .build()
-            .thenAccept({ renderable -> andyRenderable = renderable })
-            .exceptionally {
-                val toast =
-                    Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG)
-                toast.setGravity(Gravity.CENTER, 0, 0)
-                toast.show()
-                null
-            }
+        val displayMetrics = DisplayMetrics()
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics)
+        displayWidth = displayMetrics.widthPixels
+        displayHeight = displayMetrics.heightPixels
 
-        createTapListener()
         initializeSession()
 
         // Shared Camera
@@ -85,25 +75,6 @@ class ArActivity : AppCompatActivity() {
         resizeFocusView()
 
         classifier = HanziClassifier(applicationContext, "model.tflite", "labels.txt")
-    }
-
-    private fun createTapListener() {
-        arFragment.setOnTapArPlaneListener { hitResult, _, _ ->
-            // Create the Anchor.
-            val anchor = hitResult.createAnchor()
-            val anchorNode = AnchorNode(anchor)
-            anchorNode.setParent(arFragment.arSceneView.scene)
-
-            // Create the transformable andy and add it to the anchor.
-            TransformableNode(arFragment.transformationSystem).apply {
-                setParent(anchorNode)
-                renderable = andyRenderable
-
-                localRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), 90f)
-                translationController.isEnabled = false
-                select()
-            }
-        }
     }
 
     private fun initializeSession() {
@@ -140,9 +111,7 @@ class ArActivity : AppCompatActivity() {
     }
 
     private fun resizeFocusView() {
-        val displayMetrics = DisplayMetrics()
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics)
-        val longestSide = max(displayMetrics.widthPixels, displayMetrics.heightPixels)
+        val longestSide = max(displayWidth!!, displayHeight!!)
         val focusSize = (longestSide * FOCUS_VIEW_PERCENTAGE).toInt()
 
         val params = focusView.layoutParams
@@ -228,12 +197,49 @@ class ArActivity : AppCompatActivity() {
 
             val prediction = classifier.predict(mat_processed)
             ar_debug_prediction.text = prediction
+
+            val hits = frame.hitTest((displayWidth!! / 2).toFloat(), (displayHeight!! / 2).toFloat())
+
+            for (hit in hits) {
+                val trackable = hit.trackable
+                if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
+                    placeObject(hit.createAnchor(), prediction[0].toString() )
+                }
+            }
         }
+    }
+
+    private fun placeObject(anchor: Anchor, hanzi: String) {
+        ModelRenderable.builder()
+            .setSource(this, Uri.parse("models/$hanzi.sfb"))
+            .setRegistryId(hanzi)
+            .build()
+            .thenAccept {
+                addNodeToScene(anchor, it)
+            }
+            .exceptionally {
+                Toast.makeText(this, "Could not place model", Toast.LENGTH_SHORT).show()
+                return@exceptionally null
+            }
+    }
+
+    private fun addNodeToScene(anchor: Anchor, model: ModelRenderable) {
+        val anchorNode = AnchorNode(anchor)
+        TransformableNode(arFragment.transformationSystem).apply {
+            setParent(anchorNode)
+            localRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), 90f)
+            translationController.isEnabled = false
+            renderable = model
+            select()
+
+        }
+
+        arFragment.arSceneView.scene.addChild(anchorNode)
     }
 
     companion object {
         private val TAG = ArActivity::class.qualifiedName
-        private val FOCUS_VIEW_PERCENTAGE = 0.4
+        private val FOCUS_VIEW_PERCENTAGE = 0.3
 
         fun newIntent(context: Context): Intent {
             return Intent(context, ArActivity::class.java)
