@@ -25,7 +25,7 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.mrklie.yangtao.R
 import com.quickbirdstudios.yuv2mat.Yuv
-import org.opencv.android.OpenCVLoader
+import kotlinx.android.synthetic.main.activity_ar.*
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc.*
@@ -43,6 +43,8 @@ class ArActivity : AppCompatActivity() {
 
     private lateinit var andyRenderable: ModelRenderable
     private lateinit var cameraManager: CameraManager
+
+    private lateinit var classifier: HanziClassifier
 
     private var arSession: Session? = null
 
@@ -75,39 +77,14 @@ class ArActivity : AppCompatActivity() {
             }
 
         createTapListener()
-
-        // Register scene update to show focus view once tracking is done
-        arFragment.arSceneView.scene.addOnUpdateListener { frameTime ->
-            // handleFocusView()
-
-            //focusView.visibility = View.VISIBLE
-        }
-
-        arSession = Session(this, EnumSet.of(Session.Feature.SHARED_CAMERA))
-        val arConfig = Config(arSession)
-
-        // Autofocus
-        if (arConfig.focusMode == Config.FocusMode.FIXED) {
-            arConfig.focusMode = Config.FocusMode.AUTO
-        }
-        arConfig.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-
-        arSession!!.configure(arConfig)
-        arFragment.arSceneView!!.setupSession(arSession)
+        initializeSession()
 
         // Shared Camera
         // createCameraCaptureSession()
 
         resizeFocusView()
 
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        if (!OpenCVLoader.initDebug()) {
-            Toast.makeText(this, "Could not load OpenCV", Toast.LENGTH_SHORT).show()
-        }
+        classifier = HanziClassifier(applicationContext, "model.tflite", "labels.txt")
     }
 
     private fun createTapListener() {
@@ -127,6 +104,27 @@ class ArActivity : AppCompatActivity() {
                 select()
             }
         }
+    }
+
+    private fun initializeSession() {
+        // Register scene update to show focus view once tracking is done
+        arFragment.arSceneView.scene.addOnUpdateListener { frameTime ->
+            // handleFocusView()
+
+            //focusView.visibility = View.VISIBLE
+        }
+
+        arSession = Session(this, EnumSet.of(Session.Feature.SHARED_CAMERA))
+        val arConfig = Config(arSession)
+
+        // Autofocus
+        if (arConfig.focusMode == Config.FocusMode.FIXED) {
+            arConfig.focusMode = Config.FocusMode.AUTO
+        }
+        arConfig.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+
+        arSession!!.configure(arConfig)
+        arFragment.arSceneView!!.setupSession(arSession)
     }
 
     private fun handleFocusView() {
@@ -227,6 +225,11 @@ class ArActivity : AppCompatActivity() {
 
             arPreviewProcessed.setImageBitmap(bitmap_processed)
             arPreviewProcessed.bringToFront()
+
+            val prediction = classifier.predict(mat_processed)
+            ar_debug_prediction.text = prediction
+
+            println()
         }
     }
 

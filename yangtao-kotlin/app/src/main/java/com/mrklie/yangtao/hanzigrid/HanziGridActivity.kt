@@ -17,6 +17,7 @@ import com.mrklie.yangtao.persistence.Hanzi
 import kotlinx.android.synthetic.main.activity_hanzi_grid.*
 import org.jetbrains.anko.activityUiThread
 import org.jetbrains.anko.doAsync
+import org.opencv.android.OpenCVLoader
 
 
 class HanziGridActivity : AppCompatActivity() {
@@ -68,6 +69,14 @@ class HanziGridActivity : AppCompatActivity() {
         return when (item.itemId) {
             com.mrklie.yangtao.R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (!OpenCVLoader.initDebug()) {
+            Toast.makeText(this, "Could not load OpenCV", Toast.LENGTH_SHORT).show()
         }
     }
 
