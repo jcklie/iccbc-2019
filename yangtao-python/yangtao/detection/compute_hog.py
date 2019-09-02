@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import Tuple, List, Dict
 
 import warnings
+
+import cv2
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import matplotlib
@@ -34,15 +37,25 @@ class DataFrame:
     X_test: np.array
     y_test: np.array
     path_test: List[Path]
+    input_size: int
     num_classes: int
     labels_to_idx: Dict[str, int]
-    idx_to_label: Dict[int, str]
+    idx_to_label: List[str]
 
 
 def compute_hog(path_train: Path, path_test: Path, dest: Path):
-    def convert_single(p: Path) -> Tuple[np.array, np.array, List[Path], Dict[int, str], Dict[str, int]]:
-        idx_to_label = {i: x.name for i, x in enumerate(sorted(p.iterdir())) }
-        labels_to_idx = {x.name: i for i, x in enumerate(sorted(p.iterdir()))}
+    winSize = (64, 64)
+    blockSize = (16, 16)
+    blockStride = (8, 8)
+    cellSize = (8, 8)
+    nbins = 9
+
+    hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
+    print(hog.getDescriptorSize())
+
+    def convert_single(p: Path) -> Tuple[np.array, np.array, List[Path], Dict[str, int], List[str]]:
+        idx_to_label = [x.name for x in sorted(p.iterdir()) ]
+        labels_to_idx = {x: i for i, x in enumerate(idx_to_label)}
 
         X = []
         y = []
@@ -52,9 +65,10 @@ def compute_hog(path_train: Path, path_test: Path, dest: Path):
             label = folder.name
 
             for image_path in folder.iterdir():
-                image = Image.open(image_path)
-                hogs = hog(image, pixels_per_cell=(6, 6), cells_per_block=(1, 1))
+                image = cv2.imread(str(image_path))
+                # hogs = hog(image, pixels_per_cell=(6, 6), cells_per_block=(1, 1))
 
+                hogs = hog.compute(image).squeeze()
                 X.append(hogs)
                 y.append(labels_to_idx[label])
                 paths.append(image_path)
@@ -70,7 +84,7 @@ def compute_hog(path_train: Path, path_test: Path, dest: Path):
     df = DataFrame(
         X_train, y_train, path_train,
         X_test,  y_test,  paths_test,
-        len(labels_to_idx_train), labels_to_idx_train, idx_to_label_train
+        hog.getDescriptorSize(), len(labels_to_idx_train), labels_to_idx_train, idx_to_label_train
     )
 
     with open(dest, "wb") as f:
@@ -103,9 +117,9 @@ def train_hog(path: Path):
     y_test = tf.one_hot(df.y_test, df.num_classes)
 
     model = keras.Sequential([
-        keras.layers.Dense(256, input_shape=(900,), activation=tf.nn.relu),
+        keras.layers.Dense(512, input_shape=(df.input_size,), activation=tf.nn.relu),
         keras.layers.Dropout(0.5),
-        keras.layers.Dense(128, activation=tf.nn.relu),
+        keras.layers.Dense(256, activation=tf.nn.relu),
         keras.layers.Dropout(0.5),
         keras.layers.Dense(df.num_classes, activation=tf.nn.softmax)
     ])
@@ -125,6 +139,10 @@ def train_hog(path: Path):
                         callbacks=[earlystop_callback])
 
     model.save(PATH_DATARESULT_SPCCI_HOG)
+    with open(PATH_DATARESULT_SPCCI_HOG_LABELS, "w") as f:
+        for label in df.idx_to_label:
+            f.write(label)
+            f.write("\n")
 
 
 def visualize_predictions(path: Path):
@@ -159,6 +177,7 @@ def main():
     # compute_hog(PATH_DATA_GENERATED_SPCCI_120_TRAIN, PATH_DATA_GENERATED_SPCCI_120_TEST, PATH_DATA_GENERATED_SPCCI_120_HOG)
     # compute_hog(PATH_DATA_GENERATED_SPCCI_280_TRAIN, PATH_DATA_GENERATED_SPCCI_280_TEST, PATH_DATA_GENERATED_SPCCI_280_HOG)
 
+    # train_hog(PATH_DATA_GENERATED_SPCCI_120_HOG)
     train_hog(PATH_DATA_GENERATED_SPCCI_280_HOG)
 
     # visualize_predictions(PATH_DATA_GENERATED_SPCCI_280_HOG)

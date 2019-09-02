@@ -4,20 +4,24 @@ import android.content.Context
 import org.opencv.core.Mat
 import org.opencv.core.MatOfFloat
 import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc.INTER_NEAREST
+import org.opencv.imgproc.Imgproc.resize
 import org.opencv.objdetect.HOGDescriptor
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
+typealias Prediction = Pair<Int, Float>
 
 class HanziClassifier(val context: Context, val modelPath: String, val labelPath: String) {
+
 
     val interpreter: Interpreter
     val labels: List<String>
     val hog: HOGDescriptor
     val descriptors: MatOfFloat
-    val outputArray: FloatArray
+    val outputArray: Array<FloatArray>
 
     init {
         val model = loadModel()
@@ -30,7 +34,7 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         descriptors = MatOfFloat()
         descriptors.alloc(hog.descriptorSize.toInt())
 
-        outputArray = FloatArray(labels.size)
+        outputArray = arrayOf(FloatArray(labels.size))
     }
 
     private fun loadModel(): MappedByteBuffer {
@@ -52,7 +56,7 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
 
     private fun buildHog(): HOGDescriptor {
         val windowSize = Size(64.0, 64.0)
-        val blockSize = Size(8.0, 8.0)
+        val blockSize = Size(16.0, 16.0)
         val blockStride = Size(8.0, 8.0)
         val cellSize = Size(8.0, 8.0)
         val nbins = 9
@@ -61,20 +65,39 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
     }
 
     fun predict(image: Mat): String {
-        hog.compute(image, descriptors)
+        val resizedImage = Mat(64, 64, image.type())
+        resize(image, resizedImage, resizedImage.size(), 0.0, 0.0, INTER_NEAREST)
 
-        interpreter.run(descriptors.toArray(), outputArray)
+        hog.compute(resizedImage, descriptors)
 
-        val idx = maxIndex(outputArray)
-        return labels[idx]
+        val input = descriptors.toArray()
+        interpreter.run(input, outputArray)
+
+
+        return getTop10Predictions(outputArray[0]).joinToString(" ")
     }
 
-    private fun maxIndex(probabilities: FloatArray): Int {
-        return probabilities.zip(1..probabilities.size).fold(0, { bestIndex, (probability, index) ->
-            if (probability > probabilities[bestIndex])
-                index
-            else
-                bestIndex
-        })
+    fun getTop10Predictions(probabilities: FloatArray): List<String> {
+        val predictions = mutableListOf<Prediction>()
+
+        probabilities.forEachIndexed {index, score ->
+            val prediction = index to score
+
+            if (predictions.size < 10) {
+                predictions.add(prediction)
+            } else {
+                val shouldReplace = predictions.find {
+                    val (label, likelihood) = it
+                    likelihood < score
+                }
+
+                if (shouldReplace != null) {
+                    predictions[predictions.indexOf(shouldReplace)] = prediction
+                }
+            }
+        }
+
+
+        return predictions.map { labels[it.first] }
     }
 }

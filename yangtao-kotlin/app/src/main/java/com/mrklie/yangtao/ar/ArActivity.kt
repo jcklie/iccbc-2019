@@ -228,8 +228,6 @@ class ArActivity : AppCompatActivity() {
 
             val prediction = classifier.predict(mat_processed)
             ar_debug_prediction.text = prediction
-
-            println()
         }
     }
 
