@@ -30,7 +30,7 @@ import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc.*
 import java.util.*
-import kotlin.math.min
+import kotlin.math.max
 
 
 class ArActivity : AppCompatActivity() {
@@ -63,7 +63,7 @@ class ArActivity : AppCompatActivity() {
         cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
 
         ModelRenderable.builder()
-            .setSource(this, Uri.parse("发.sfb"))
+            .setSource(this, Uri.parse("models/发.sfb"))
             .build()
             .thenAccept({ renderable -> andyRenderable = renderable })
             .exceptionally {
@@ -144,13 +144,12 @@ class ArActivity : AppCompatActivity() {
     private fun resizeFocusView() {
         val displayMetrics = DisplayMetrics()
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics)
-        val displayWidth = displayMetrics.widthPixels
-        val displayHeight = displayMetrics.heightPixels
-        val displayLen = min(displayWidth, displayHeight)
+        val longestSide = max(displayMetrics.widthPixels, displayMetrics.heightPixels)
+        val focusSize = (longestSide * FOCUS_VIEW_PERCENTAGE).toInt()
 
         val params = focusView.layoutParams
-        params.width = (displayLen * 0.8).toInt()
-        params.height = (displayLen * 0.8).toInt()
+        params.width = focusSize
+        params.height = focusSize
 
         focusView.visibility = View.VISIBLE
     }
@@ -164,21 +163,25 @@ class ArActivity : AppCompatActivity() {
         image.use {
             val width = image.width
             val height = image.height
-            val longest_side = min(width, height).toDouble()
-            val border = longest_side * 0.0
-            val size = longest_side - border
-            val roi = Rect(Point(height - longest_side + border, width - longest_side + border), Size(size, size))
-
-            // val yuv = YuvImage(image).clip(left=20, top=20, right=40, bottom=40)
+            val longestSide = max(width, image.height)
+            val size = longestSide * FOCUS_VIEW_PERCENTAGE
 
             val mat_raw = Yuv.rgb(image)
 
+            // Rotate it
             // Core.flip(mat.t(), mat, 0)
             Core.flip(mat_raw.t(), mat_raw, 1)
 
+            // Cut it to the focus size
+            // The aspect ratio of the display (which shows the focus rectangle) and
+            // the camera are generally not the same. The image is displayed by scaling the
+            // longer side to the same size and then center the image. Therefore, we use the
+            // longest side with the known focus percentage to compute how many pixels the
+            // focus should be.
+            val roi = Rect(Point((height - size) / 2, (width - size) / 2), Size(size, size))
             val mat_processed = Mat(mat_raw, roi)
 
-            // Do the processing
+            // Convert to rgb and threshold
             cvtColor(mat_processed, mat_processed, COLOR_BGR2GRAY)
             threshold(mat_processed, mat_processed, 120.0, 255.0, THRESH_BINARY)
 
@@ -229,6 +232,7 @@ class ArActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = ArActivity::class.qualifiedName
+        private val FOCUS_VIEW_PERCENTAGE = 0.4
 
         fun newIntent(context: Context): Intent {
             return Intent(context, ArActivity::class.java)

@@ -4,10 +4,11 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.mrklie.yangtao.R
 import com.mrklie.yangtao.hanzidetail.HanziDetailActivity
+import com.mrklie.yangtao.persistence.Hanzi
 import kotlinx.android.synthetic.main.hanzi_grid_item.view.*
 
 class HanziGridViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    fun bindView(hanzi: HanziModel) {
+    fun bindView(hanzi: Hanzi) {
         itemView.hanzi_tile_character.text = hanzi.character
         itemView.hanzi_tile_pinyin.text = hanzi.pinyin
 

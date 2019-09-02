@@ -59,6 +59,24 @@
             android:textSize="50sp"
             tools:text="hàn" />
 
+        <TextView
+            android:id="@+id/hanzi_detail_etymology"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="12sp"
+            tools:text="Etymology" />
+
+        <TextView
+            android:id="@+id/hanzi_detail_decomposition"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="12sp"
+            tools:text="Decomposition" />
+
     </LinearLayout>
 
 
