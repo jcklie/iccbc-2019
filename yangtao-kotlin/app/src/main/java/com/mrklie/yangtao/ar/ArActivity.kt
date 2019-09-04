@@ -7,16 +7,18 @@ import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.view.MotionEvent
 import android.view.View
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.ar.core.*
 import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.HitTestResult
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.mrklie.yangtao.R
@@ -195,18 +197,54 @@ class ArActivity : AppCompatActivity() {
             arPreviewProcessed.setImageBitmap(bitmap_processed)
             arPreviewProcessed.bringToFront()
 
-            val prediction = classifier.predict(mat_processed)
-            ar_debug_prediction.text = prediction
+            val predictions = classifier.predict(mat_processed)
+            ar_debug_prediction.text = predictions.joinToString("")
 
             val hits = frame.hitTest((displayWidth!! / 2).toFloat(), (displayHeight!! / 2).toFloat())
 
             for (hit in hits) {
                 val trackable = hit.trackable
                 if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
-                    placeObject(hit.createAnchor(), prediction[0].toString() )
+                    placeScanDialog(hit.createAnchor(), predictions)
+                    // placeObject(hit.createAnchor(), prediction[0].toString() )
                 }
             }
         }
+    }
+
+    private fun placeScanDialog(anchor: Anchor, predictions: List<String>) {
+        ViewRenderable.builder()
+            .setView(this, R.layout.scan_dialog)
+            .build()
+            .thenAccept {renderable ->
+                renderable.isShadowReceiver = false
+
+                val view = renderable.view
+                val spinner = view.findViewById<Spinner>(R.id.scan_dialog_spinner)
+                val dataAdapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, predictions)
+                spinner.adapter = dataAdapter
+
+                val yesButton = view.findViewById<Button>(R.id.scan_dialog_yes)
+                val noButton = view.findViewById<Button>(R.id.scan_dialog_no)
+
+                // Create the node
+                val anchorNode = AnchorNode(anchor)
+                anchorNode.renderable = renderable
+                anchorNode.localScale = Vector3(0.1f, 0.1f, 0.1f)
+
+                // Set listeners
+                yesButton.setOnClickListener {
+                    placeObject(anchor, spinner.selectedItem.toString())
+                    anchorNode.setParent(null)
+                }
+
+                noButton.setOnClickListener {
+                    anchorNode.setParent(null)
+                }
+
+                // Place the node
+                arFragment.arSceneView.scene.addChild(anchorNode)
+            }
     }
 
     private fun placeObject(anchor: Anchor, hanzi: String) {
@@ -215,7 +253,7 @@ class ArActivity : AppCompatActivity() {
             .setRegistryId(hanzi)
             .build()
             .thenAccept {
-                addNodeToScene(anchor, it)
+                addHanziToScene(anchor, it)
             }
             .exceptionally {
                 Toast.makeText(this, "Could not place model", Toast.LENGTH_SHORT).show()
@@ -223,7 +261,7 @@ class ArActivity : AppCompatActivity() {
             }
     }
 
-    private fun addNodeToScene(anchor: Anchor, model: ModelRenderable) {
+    private fun addHanziToScene(anchor: Anchor, model: ModelRenderable) {
         val anchorNode = AnchorNode(anchor)
         TransformableNode(arFragment.transformationSystem).apply {
             setParent(anchorNode)
@@ -232,6 +270,11 @@ class ArActivity : AppCompatActivity() {
             renderable = model
             select()
 
+            setOnTapListener {hitTestResult: HitTestResult, motionEvent: MotionEvent ->
+                anchorNode.setParent(null)
+                setParent(null)
+                anchor.detach()
+            }
         }
 
         arFragment.arSceneView.scene.addChild(anchorNode)
@@ -239,7 +282,7 @@ class ArActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = ArActivity::class.qualifiedName
-        private val FOCUS_VIEW_PERCENTAGE = 0.3
+        private val FOCUS_VIEW_PERCENTAGE = 0.25
 
         fun newIntent(context: Context): Intent {
             return Intent(context, ArActivity::class.java)

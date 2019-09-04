@@ -64,7 +64,7 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         return HOGDescriptor(windowSize, blockSize, blockStride, cellSize, nbins)
     }
 
-    fun predict(image: Mat): String {
+    fun predict(image: Mat): List<String> {
         val resizedImage = Mat(64, 64, image.type())
         resize(image, resizedImage, resizedImage.size(), 0.0, 0.0, INTER_NEAREST)
 
@@ -74,7 +74,7 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         interpreter.run(input, outputArray)
 
 
-        return getTop10Predictions(outputArray[0]).joinToString("")
+        return getTop10Predictions(outputArray[0])
     }
 
     fun getTop10Predictions(probabilities: FloatArray): List<String> {
