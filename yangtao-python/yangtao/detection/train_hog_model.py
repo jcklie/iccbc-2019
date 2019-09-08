@@ -1,21 +1,16 @@
+import logging
 import pickle
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Tuple, List, Dict
 
 import warnings
 
-import cv2
+from yangtao.util import setup_logging
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-import matplotlib
-import matplotlib.pyplot as plt
+import cv2
 
 from PIL import Image
-
-from skimage.feature import hog
-from skimage import data, exposure
 
 import tensorflow as tf
 from tensorflow import keras
@@ -25,25 +20,28 @@ import numpy as np
 
 from tqdm import tqdm
 
+import attr
+
 from yangtao.config import *
 
 EPOCHS = 100
 
-@dataclass
+@attr.s
 class DataFrame:
-    X_train: np.array
-    y_train: np.array
-    paths_train: List[Path]
-    X_test: np.array
-    y_test: np.array
-    path_test: List[Path]
-    input_size: int
-    num_classes: int
-    labels_to_idx: Dict[str, int]
-    idx_to_label: List[str]
+    X_train: np.array = attr.ib()
+    y_train: np.array = attr.ib()
+    paths_train: List[Path] = attr.ib()
+    X_test: np.array = attr.ib()
+    y_test: np.array = attr.ib()
+    path_test: List[Path] = attr.ib()
+    input_size: int = attr.ib()
+    num_classes: int = attr.ib()
+    labels_to_idx: Dict[str, int] = attr.ib()
+    idx_to_label: List[str] = attr.ib()
 
 
 def compute_hog(path_train: Path, path_test: Path, dest: Path):
+    logging.info(f"Computing HOG features for [{path_train}] and [{path_test}], saving to [{dest}]")
     winSize = (64, 64)
     blockSize = (16, 16)
     blockStride = (8, 8)
@@ -51,7 +49,6 @@ def compute_hog(path_train: Path, path_test: Path, dest: Path):
     nbins = 9
 
     hog = cv2.HOGDescriptor(winSize, blockSize, blockStride, cellSize, nbins)
-    print(hog.getDescriptorSize())
 
     def convert_single(p: Path) -> Tuple[np.array, np.array, List[Path], Dict[str, int], List[str]]:
         idx_to_label = [x.name for x in sorted(p.iterdir()) ]
@@ -61,11 +58,24 @@ def compute_hog(path_train: Path, path_test: Path, dest: Path):
         y = []
         paths = []
 
+        kernel = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(5, 5), anchor=(2, 2))
+
         for folder in tqdm(list(sorted(p.iterdir()))):
             label = folder.name
 
             for image_path in folder.iterdir():
-                image = cv2.imread(str(image_path))
+                assert image_path.exists()
+
+                # opencv can sometimes not read file paths with unicode, so
+                # we use this hack
+                with open(image_path, "rb") as f:
+                    bytes = bytearray(f.read())
+                    arr = np.asarray(bytes, dtype=np.uint8)
+                    image = cv2.imdecode(arr, cv2.IMREAD_UNCHANGED)
+
+                # cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+                # cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+
                 # hogs = hog(image, pixels_per_cell=(6, 6), cells_per_block=(1, 1))
 
                 hogs = hog.compute(image).squeeze()
@@ -90,25 +100,11 @@ def compute_hog(path_train: Path, path_test: Path, dest: Path):
     with open(dest, "wb") as f:
         pickle.dump(df, f)
 
-def debug_image(image, fd):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
-
-    ax1.axis('off')
-    ax1.imshow(image, cmap=plt.cm.gray)
-    ax1.set_title('Input image')
-
-    # Rescale histogram for better display
-    hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 10))
-
-    ax2.axis('off')
-    ax2.imshow(hog_image_rescaled, cmap=plt.cm.gray)
-    ax2.set_title('Histogram of Oriented Gradients')
-    plt.show()
-
 
 def load_hog(path: Path) -> DataFrame:
     with open(path, "rb") as f:
         return pickle.load(f)
+
 
 def train_hog(path: Path):
     df = load_hog(path)
@@ -139,7 +135,7 @@ def train_hog(path: Path):
                         callbacks=[earlystop_callback])
 
     model.save(PATH_DATARESULT_SPCCI_HOG)
-    with open(PATH_DATARESULT_SPCCI_HOG_LABELS, "w") as f:
+    with open(PATH_DATARESULT_SPCCI_HOG_LABELS, "w", encoding="utf-8") as f:
         for label in df.idx_to_label:
             f.write(label)
             f.write("\n")
@@ -173,9 +169,11 @@ def visualize_predictions(path: Path):
 
     plt.show()
 
+
 def main():
+    setup_logging()
     # compute_hog(PATH_DATA_GENERATED_SPCCI_120_TRAIN, PATH_DATA_GENERATED_SPCCI_120_TEST, PATH_DATA_GENERATED_SPCCI_120_HOG)
-    # compute_hog(PATH_DATA_GENERATED_SPCCI_280_TRAIN, PATH_DATA_GENERATED_SPCCI_280_TEST, PATH_DATA_GENERATED_SPCCI_280_HOG)
+    compute_hog(PATH_DATA_GENERATED_SPCCI_280_TRAIN, PATH_DATA_GENERATED_SPCCI_280_TEST, PATH_DATA_GENERATED_SPCCI_280_HOG)
 
     # train_hog(PATH_DATA_GENERATED_SPCCI_120_HOG)
     train_hog(PATH_DATA_GENERATED_SPCCI_280_HOG)

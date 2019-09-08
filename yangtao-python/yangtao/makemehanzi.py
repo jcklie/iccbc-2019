@@ -1,22 +1,35 @@
 import json
 import logging
-from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import wget
 
+import attr
+
+import webcolors
+
+from yangtao.hanzi import get_most_frequent_characters
 from yangtao.util import setup_logging
-from yangtao.config import PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, PATH_DATA_SVG, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY_RAW
+from yangtao.config import PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, PATH_DATA_SVG, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, \
+    PATH_GENERATED_DICTIONARY
 
 _SVG_URL = "https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics.txt"
 _DICTIONARY_URL = "https://raw.githubusercontent.com/skishore/makemeahanzi/master/dictionary.txt"
 
 
-@dataclass
-class Decomposition:
-    indices: List
-    tree: List
+@attr.s
+class DictionaryEntry:
+    character: str = attr.ib()
+    pinyin: str = attr.ib()
+    definition: str = attr.ib()
+    decomposition: str = attr.ib()
+    origin: str = attr.ib()
+    phonetic: str = attr.ib()
+    semantic: str = attr.ib()
+    hint: str = attr.ib()
+    indices: List = attr.ib()
+    tree: List = attr.ib()
 
     def get_character_for_stroke(self, stroke_number: int):
         cur = self.tree
@@ -40,7 +53,7 @@ def _download_file(url: str, target_path: Path):
     wget.download(url, str(target_path.resolve()))
 
 
-def parse_decomposition_data():
+def parse_dictionary():
     def _parse(tokens: List[str]):
         if len(tokens) == 0:
             return []
@@ -59,45 +72,105 @@ def parse_decomposition_data():
         else:
             return [s]
 
-    decompositions = {}
-    with open(PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY_RAW) as f:
+    result = {}
+    with open(PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
             tree = _parse(list(obj["decomposition"]))
-            decomposition = Decomposition(obj["matches"], tree)
-            decompositions[obj["character"]] = decomposition
+            character = obj["character"]
+            pinyin = ", ".join(obj["pinyin"])
+            definition = str(obj.get("definition", ""))
+            decomposition = obj["decomposition"]
+            origin = obj["etymology"]["type"] if "etymology" in obj else ""
 
-    return decompositions
+            if "etymology" in obj:
+                phonetic = obj["etymology"]["phonetic"] if "phonetic" in obj["etymology"] else ""
+                semantic = obj["etymology"]["semantic"] if "semantic" in obj["etymology"] else ""
+                hint = obj["etymology"]["hint"] if "hint" in obj["etymology"] else ""
+            else:
+                phonetic = ""
+                semantic = ""
+                hint = ""
+
+            entry = DictionaryEntry(character, pinyin, definition, decomposition, origin, phonetic, semantic, hint, obj["matches"], tree)
+            result[obj["character"]] = entry
+
+    with open(PATH_GENERATED_DICTIONARY, "w", encoding="utf-8") as f:
+        target = set(get_most_frequent_characters())
+        for e in result.values():
+            if e.character not in target:
+                continue
+
+            line = f"{e.character}\t{e.pinyin}\t{e.definition}\t{e.decomposition}\t{e.origin}\t{e.phonetic}\t{e.semantic}\t{e.hint}"
+            f.write(line)
+            f.write("\n")
 
 
-def generate_svg(decompositions):
+    return result
+
+
+def generate_svg(dictionary: Dict[str, DictionaryEntry]):
     # We use the makemeahanzi SVG here. The format is one json object per line which contains the
     # SVG paths in addition to some other data
 
     colors = {
-        "月" : "dimgray",
-        "火" : "firebrick",
-        "艹" : "darkgreen",
-        "氵" : "cornflowerblue",
-        "土": "saddlebrown",
-        "石": "lightslategray",
-        "日": "goldenrod"
+        "口": "#e35d6a",
+        "水": "#40a4df",
+        "氵": "#40a4df",
+        "木": "#533118",
+        "人": "#eec1ad",
+        "亻": "#eec1ad",
+        "手": "#eec1ad",
+        "扌": "#eec1ad",
+        "心": "#f7347a ",
+        "忄": "#f7347a ",
+        "⺗": "#f7347a ",
+        "言": "#4156C5",
+        "讠": " #4156C5",
+        "日": "#EF8E38",
+        "糸": "#B7A99B",
+        "幺": "#B7A99B",
+        "肉": "#E8B3B9 ",
+        "月": "#CACACA ",
+        "土": "#a0522d",
+        "⻌": "#2F2F2F",
+        "艹": "#608038",
+        "艸": "#608038",
+        "草": "#608038",
+        "宀": "#A44A4A",
+        "貝": " #FFF5EE",
+        "贝": " #FFF5EE",
+        "女": "#7F00FF",
+        "金": "#DAA520",
+        "钅": " #DAA520",
+        "田": " #C7A54E",
+        "火": " #e25822 ",
+        "灬": " #e25822 ",
+        "石": " #95948B",
+        "禾": " #F5DEB3",
+        "礻": " #569199 ",
+        "示": "  #569199 ",
     }
 
-    with open(PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW) as f:
-        for line in f:
+    WEBCOLORS = list(webcolors.CSS3_NAMES_TO_HEX.values())
+    def _get_color(s: str):
+        i = ord(s)
+        return WEBCOLORS[i % len(WEBCOLORS)]
 
+    with open(PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, encoding="utf-8") as f:
+        for line in f:
             obj = json.loads(line)
             character = obj['character']
             strokes = obj["strokes"]
 
-            decomposition = decompositions[character]
-            assert len(strokes) == len(decomposition.indices)
+            entry = dictionary[character]
+            assert len(strokes) == len(entry.indices)
 
             paths = []
             for i, stroke in enumerate(strokes):
-                part = decomposition.get_character_for_stroke(i)
-                color = colors.get(part, "black")
+                part = entry.get_character_for_stroke(i)
+
+                color = colors.get(part, _get_color(part) if part else "black")
 
                 path = f'<path fill="{color}" d="{stroke}"></path>'
                 paths.append(path)
@@ -113,14 +186,16 @@ def generate_svg(decompositions):
             with open(PATH_DATA_SVG / f"{character}.svg", "w") as f_out:
                 f_out.write(svg)
 
+
+
 if __name__ == '__main__':
     setup_logging()
     PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW.parent.mkdir(parents=True, exist_ok=True)
     PATH_DATA_SVG.mkdir(parents=True, exist_ok=True)
 
     _download_file(_SVG_URL, PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW)
-    _download_file(_DICTIONARY_URL, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY_RAW)
+    _download_file(_DICTIONARY_URL, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY)
 
-    decompositions = parse_decomposition_data()
+    dictionary = parse_dictionary()
+    generate_svg(dictionary)
 
-    generate_svg(decompositions)
