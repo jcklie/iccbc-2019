@@ -5,4 +5,5 @@
     <string name="title_activity_hanzi_detail">HanziDetail</string>
     <string name="scan_dialog_yes">Correct</string>
     <string name="scan_dialog_no">Wrong</string>
+    <string name="action_save_hanzi_details">Save</string>
 </resources>

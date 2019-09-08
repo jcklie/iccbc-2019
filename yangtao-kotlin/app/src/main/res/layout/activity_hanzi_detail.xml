@@ -95,6 +95,11 @@
             android:textSize="14sp"
             tools:text="Hints" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"></LinearLayout>
+
         <EditText
             android:id="@+id/hanzi_detail_mnemonic"
             android:layout_width="match_parent"
@@ -107,6 +112,8 @@
             tools:text="Mnemonic" />
 
     </LinearLayout>
+
+
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

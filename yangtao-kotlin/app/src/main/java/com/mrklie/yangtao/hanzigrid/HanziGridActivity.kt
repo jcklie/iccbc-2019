@@ -43,8 +43,8 @@ class HanziGridActivity : AppCompatActivity() {
         hanzi_grid_recycler_view.adapter = hanziGridRecyclerAdapter
 
         doAsync {
-            // checkFirstRun()
-            prepopulateDatabase()
+            checkFirstRun()
+
             val characters = AppDatabase.getDatabase(applicationContext).hanziDao().selectAll()
             activityUiThread  {
                 initHanziGrid(characters)
