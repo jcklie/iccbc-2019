@@ -60,13 +60,13 @@
             tools:text="hàn" />
 
         <TextView
-            android:id="@+id/hanzi_detail_etymology"
+            android:id="@+id/hanzi_detail_definition"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/noto_sans_bold"
             android:gravity="center_horizontal"
-            android:textSize="12sp"
-            tools:text="Etymology" />
+            android:textSize="20sp"
+            tools:text="Definition" />
 
         <TextView
             android:id="@+id/hanzi_detail_decomposition"
@@ -74,8 +74,37 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/noto_sans_bold"
             android:gravity="center_horizontal"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="Decomposition" />
+
+        <TextView
+            android:id="@+id/hanzi_detail_phonetic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="14sp"
+            tools:text="Hints" />
+
+        <TextView
+            android:id="@+id/hanzi_detail_semantic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="14sp"
+            tools:text="Hints" />
+
+        <EditText
+            android:id="@+id/hanzi_detail_mnemonic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="25sp"
+            android:hint="Enter your mnemonic..."
+            android:layout_margin="16dp"
+            tools:text="Mnemonic" />
 
     </LinearLayout>
 

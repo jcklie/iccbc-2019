@@ -132,11 +132,19 @@ class HanziGridActivity : AppCompatActivity() {
         val result = mutableListOf<Hanzi>()
         assets.open("character_data.tsv").bufferedReader().useLines {
             for (line in it ) {
-                val s = line.split("\t")
+                val s = line.split("\t").toMutableList()
+                while (s.size < 8) s.add("")
+
                 val character = s[0]
                 val pinyin = s[1]
-                val etymology = if (s.size > 2) s[2] else ""
-                val hanzi = Hanzi(character, pinyin, etymology)
+                val definition = s[2]
+                val decomposition = s[3]
+                val origin = s[4]
+                val phonetic = s[5]
+                val semantic = s[6]
+                val mnemonic = s[7]
+                val hanzi = Hanzi(character, pinyin, definition, decomposition, origin,
+                    phonetic, semantic, mnemonic)
                 result.add(hanzi)
             }
         }

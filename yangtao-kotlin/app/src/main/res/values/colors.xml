@@ -5,4 +5,10 @@
     <color name="colorAccent">#D81B60</color>
     <color name="colorGray">#C0C0C0	</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="colorBlack">#000000</color>
+    <color name="firstTone">#FF0000</color>
+    <color name="secondTone">#FFa500</color>
+    <color name="thirdTone">#008000</color>
+    <color name="fourthTone">#0000ff</color>
+    <color name="fifthTone">#808080</color>
 </resources>

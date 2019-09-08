@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
@@ -11,6 +12,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:padding="4dp"
+        android:elevation="1dp"
         android:layout_margin="4dp">
 
         <LinearLayout
@@ -39,4 +41,14 @@
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
-</LinearLayout>
+
+    <ImageView
+        android:id="@+id/hanzi_detail_scanned"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginLeft="70dp"
+        android:layout_marginTop="5dp"
+        android:elevation="2dp"
+    app:srcCompat="@drawable/ic_star_yellow_24dp" />
+
+</RelativeLayout>
