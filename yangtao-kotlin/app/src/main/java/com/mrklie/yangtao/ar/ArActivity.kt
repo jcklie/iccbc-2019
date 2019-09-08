@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.ar.core.*
 import com.google.ar.sceneform.AnchorNode
@@ -37,16 +38,18 @@ class ArActivity : AppCompatActivity() {
     private lateinit var arPreviewRaw: ImageView
     private lateinit var arPreviewProcessed: ImageView
     private lateinit var focusView: View
-
     private lateinit var scanButton: FloatingActionButton
 
     private lateinit var cameraManager: CameraManager
 
     private lateinit var classifier: HanziClassifier
+
     private var displayWidth: Int? = 0
     private var displayHeight: Int? = 0
+    private var showDebug: Boolean = false
 
     private var arSession: Session? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,6 +80,9 @@ class ArActivity : AppCompatActivity() {
         resizeFocusView()
 
         classifier = HanziClassifier(applicationContext, "model.tflite", "labels.txt")
+
+        val SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        showDebug = SP.getBoolean("showDebug", false)
     }
 
     private fun initializeSession() {
@@ -190,15 +196,17 @@ class ArActivity : AppCompatActivity() {
             val bitmap_processed = Bitmap.createBitmap(size.toInt(), size.toInt(), Bitmap.Config.ARGB_8888 )
             Utils.matToBitmap(mat_processed, bitmap_processed)
 
-            // Display the previews
-            arPreviewRaw.setImageBitmap(bitmap_raw)
-            arPreviewRaw.bringToFront()
-
-            arPreviewProcessed.setImageBitmap(bitmap_processed)
-            arPreviewProcessed.bringToFront()
-
             val predictions = classifier.predict(mat_processed)
-            ar_debug_prediction.text = predictions.joinToString("")
+
+            // Display the previews
+            if (showDebug) {
+                arPreviewRaw.setImageBitmap(bitmap_raw)
+                arPreviewRaw.bringToFront()
+
+                arPreviewProcessed.setImageBitmap(bitmap_processed)
+                arPreviewProcessed.bringToFront()
+                ar_debug_prediction.text = predictions.joinToString("")
+            }
 
             val hits = frame.hitTest((displayWidth!! / 2).toFloat(), (displayHeight!! / 2).toFloat())
 
@@ -248,8 +256,9 @@ class ArActivity : AppCompatActivity() {
     }
 
     private fun placeObject(anchor: Anchor, hanzi: String) {
+        val modelName = "models/hanzi${classifier.labelToIndex(hanzi)}.sfb"
         ModelRenderable.builder()
-            .setSource(this, Uri.parse("models/$hanzi.sfb"))
+            .setSource(this, Uri.parse(modelName))
             .setRegistryId(hanzi)
             .build()
             .thenAccept {
@@ -265,7 +274,9 @@ class ArActivity : AppCompatActivity() {
         val anchorNode = AnchorNode(anchor)
         TransformableNode(arFragment.transformationSystem).apply {
             setParent(anchorNode)
-            localRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), 90f)
+            val firstRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), -90f)
+            val secondRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), 180f)
+            localRotation = Quaternion.multiply(firstRotation, secondRotation)
             translationController.isEnabled = false
             renderable = model
             select()

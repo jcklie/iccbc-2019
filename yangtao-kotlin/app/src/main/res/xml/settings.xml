@@ -1,0 +1,8 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:key="showDebug"
+        app:title="Enable debug views"/>
+
+</PreferenceScreen>

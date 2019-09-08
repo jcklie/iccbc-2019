@@ -14,6 +14,7 @@ import com.mrklie.yangtao.BuildConfig
 import com.mrklie.yangtao.ar.ArActivity
 import com.mrklie.yangtao.persistence.AppDatabase
 import com.mrklie.yangtao.persistence.Hanzi
+import com.mrklie.yangtao.settings.SettingsActivity
 import kotlinx.android.synthetic.main.activity_hanzi_grid.*
 import org.jetbrains.anko.activityUiThread
 import org.jetbrains.anko.doAsync
@@ -67,7 +68,10 @@ class HanziGridActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            com.mrklie.yangtao.R.id.action_settings -> true
+            com.mrklie.yangtao.R.id.action_settings -> {
+                startActivity(SettingsActivity.newIntent(applicationContext))
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

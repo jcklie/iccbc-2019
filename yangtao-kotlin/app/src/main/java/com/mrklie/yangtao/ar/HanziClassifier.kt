@@ -16,9 +16,9 @@ typealias Prediction = Pair<Int, Float>
 
 class HanziClassifier(val context: Context, val modelPath: String, val labelPath: String) {
 
-
     val interpreter: Interpreter
-    val labels: List<String>
+    val idxToLabel: List<String>
+    val labelToIdx: Map<String, Int>
     val hog: HOGDescriptor
     val descriptors: MatOfFloat
     val outputArray: Array<FloatArray>
@@ -28,13 +28,17 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         val options = Interpreter.Options()
         interpreter = Interpreter(model, options)
 
-        labels = loadLabels()
+        idxToLabel = loadLabels()
+        labelToIdx = mutableMapOf()
+        idxToLabel.forEachIndexed { i, label ->
+            labelToIdx[label] = i
+        }
 
         hog = buildHog()
         descriptors = MatOfFloat()
         descriptors.alloc(hog.descriptorSize.toInt())
 
-        outputArray = arrayOf(FloatArray(labels.size))
+        outputArray = arrayOf(FloatArray(idxToLabel.size))
     }
 
     private fun loadModel(): MappedByteBuffer {
@@ -73,7 +77,6 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         val input = descriptors.toArray()
         interpreter.run(input, outputArray)
 
-
         return getTop10Predictions(outputArray[0])
     }
 
@@ -98,6 +101,9 @@ class HanziClassifier(val context: Context, val modelPath: String, val labelPath
         }
 
 
-        return predictions.map { labels[it.first] }
+        return predictions.map { idxToLabel[it.first] }
     }
+
+    public fun indexToLabel(idx: Int): String = idxToLabel[idx]
+    public fun labelToIndex(label: String): Int = labelToIdx[label]!!
 }
