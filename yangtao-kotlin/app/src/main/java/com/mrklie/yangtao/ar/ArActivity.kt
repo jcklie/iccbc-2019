@@ -16,6 +16,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.ar.core.*
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.HitTestResult
+import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ModelRenderable
@@ -23,6 +24,7 @@ import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.mrklie.yangtao.R
+import com.mrklie.yangtao.hanzidetail.HanziDetailActivity
 import com.quickbirdstudios.yuv2mat.Yuv
 import kotlinx.android.synthetic.main.activity_ar.*
 import org.opencv.android.Utils
@@ -238,7 +240,7 @@ class ArActivity : AppCompatActivity() {
                 // Create the node
                 val anchorNode = AnchorNode(anchor)
                 anchorNode.renderable = renderable
-                anchorNode.localScale = Vector3(0.1f, 0.1f, 0.1f)
+                anchorNode.localScale = Vector3(0.2f, 0.2f, 0.2f)
 
                 // Set listeners
                 yesButton.setOnClickListener {
@@ -263,6 +265,7 @@ class ArActivity : AppCompatActivity() {
             .build()
             .thenAccept {
                 addHanziToScene(anchor, it)
+                addHanziMenuToScene(anchor, hanzi)
             }
             .exceptionally {
                 Toast.makeText(this, "Could not place model", Toast.LENGTH_SHORT).show()
@@ -280,15 +283,45 @@ class ArActivity : AppCompatActivity() {
             translationController.isEnabled = false
             renderable = model
             select()
-
-            setOnTapListener {hitTestResult: HitTestResult, motionEvent: MotionEvent ->
-                anchorNode.setParent(null)
-                setParent(null)
-                anchor.detach()
-            }
         }
 
         arFragment.arSceneView.scene.addChild(anchorNode)
+    }
+
+    private fun addHanziMenuToScene(anchor: Anchor, hanzi: String) {
+        ViewRenderable.builder()
+            .setView(this, R.layout.scan_menu)
+            .build()
+            .thenAccept {viewRenderable ->
+                viewRenderable.isShadowReceiver = false
+
+                val view = viewRenderable.view
+
+                val infoButton = view.findViewById<ImageButton>(R.id.scan_menu_info)
+                val cancelButton = view.findViewById<ImageButton>(R.id.scan_menu_delete)
+
+                // Create the node
+                val pose = Pose.makeTranslation(floatArrayOf(0.0f, 0.15f, 0.0f))
+                val newAnchor = arSession!!.createAnchor(anchor.pose.compose(pose))
+                val anchorNode = AnchorNode(newAnchor)
+                anchorNode.renderable = viewRenderable
+                anchorNode.localScale = Vector3(0.2f, 0.2f, 0.2f)
+
+                // Set listeners
+                infoButton.setOnClickListener {
+                    startActivity(HanziDetailActivity.newIntent(applicationContext, hanzi))
+                    anchorNode.setParent(null)
+                    anchor.detach()
+                }
+
+                cancelButton.setOnClickListener {
+                    anchorNode.setParent(null)
+                    anchor.detach()
+                }
+
+                // Place the node
+                arFragment.arSceneView.scene.addChild(anchorNode)
+            }
     }
 
     companion object {

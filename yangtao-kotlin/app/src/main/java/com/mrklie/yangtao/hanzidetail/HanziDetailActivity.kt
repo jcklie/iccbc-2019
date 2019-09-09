@@ -83,9 +83,9 @@ class HanziDetailActivity : AppCompatActivity() {
         private val TAG = HanziDetailActivity::class.qualifiedName
         private const val KEY_CHARACTER = "KEY_CHARACTER"
 
-        fun newIntent(context: Context, hanzi: Hanzi): Intent {
+        fun newIntent(context: Context, hanzi: String): Intent {
             val intent = Intent(context, HanziDetailActivity::class.java)
-            intent.putExtra(KEY_CHARACTER, hanzi.character)
+            intent.putExtra(KEY_CHARACTER, hanzi)
             return intent
         }
     }

@@ -22,7 +22,7 @@ class HanziGridViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         }
 
         itemView.setOnClickListener {
-            it.context.startActivity(HanziDetailActivity.newIntent(it.context, hanzi))
+            it.context.startActivity(HanziDetailActivity.newIntent(it.context, hanzi.character))
         }
     }
 }
