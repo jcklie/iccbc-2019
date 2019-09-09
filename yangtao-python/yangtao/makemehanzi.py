@@ -9,6 +9,7 @@ import attr
 
 import webcolors
 
+from yangtao.etymology import parse_etymology
 from yangtao.hanzi import get_most_frequent_characters
 from yangtao.util import setup_logging
 from yangtao.config import PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, PATH_DATA_SVG, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, \
@@ -28,6 +29,7 @@ class DictionaryEntry:
     phonetic: str = attr.ib()
     semantic: str = attr.ib()
     hint: str = attr.ib()
+    etymology: str = attr.ib()
     indices: List = attr.ib()
     tree: List = attr.ib()
 
@@ -73,6 +75,7 @@ def parse_dictionary():
             return [s]
 
     result = {}
+    etymology_dict = parse_etymology()
     with open(PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
@@ -82,6 +85,7 @@ def parse_dictionary():
             definition = str(obj.get("definition", ""))
             decomposition = obj["decomposition"]
             origin = obj["etymology"]["type"] if "etymology" in obj else ""
+            etymology = etymology_dict.get(character, "")
 
             if "etymology" in obj:
                 phonetic = obj["etymology"]["phonetic"] if "phonetic" in obj["etymology"] else ""
@@ -92,7 +96,7 @@ def parse_dictionary():
                 semantic = ""
                 hint = ""
 
-            entry = DictionaryEntry(character, pinyin, definition, decomposition, origin, phonetic, semantic, hint, obj["matches"], tree)
+            entry = DictionaryEntry(character, pinyin, definition, decomposition, origin, phonetic, semantic, hint, etymology, obj["matches"], tree)
             result[obj["character"]] = entry
 
     with open(PATH_GENERATED_DICTIONARY, "w", encoding="utf-8") as f:
@@ -101,7 +105,7 @@ def parse_dictionary():
             if e.character not in target:
                 continue
 
-            line = f"{e.character}\t{e.pinyin}\t{e.definition}\t{e.decomposition}\t{e.origin}\t{e.phonetic}\t{e.semantic}\t{e.hint}"
+            line = f"{e.character}\t{e.pinyin}\t{e.definition}\t{e.decomposition}\t{e.origin}\t{e.phonetic}\t{e.semantic}\t{e.hint}\t{e.etymology}"
             f.write(line)
             f.write("\n")
 
