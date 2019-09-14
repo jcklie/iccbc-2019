@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.View
@@ -25,14 +26,22 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.mrklie.yangtao.R
 import com.mrklie.yangtao.hanzidetail.HanziDetailActivity
+import com.mrklie.yangtao.persistence.AppDatabase
 import com.quickbirdstudios.yuv2mat.Yuv
 import kotlinx.android.synthetic.main.activity_ar.*
+import org.jetbrains.anko.doAsync
 import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.core.Core.subtract
 import org.opencv.core.Point
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.*
+import java.io.File
+import java.lang.Exception
 import java.util.*
 import kotlin.math.max
+import kotlin.math.min
 
 
 class ArActivity : AppCompatActivity() {
@@ -51,7 +60,6 @@ class ArActivity : AppCompatActivity() {
     private var showDebug: Boolean = false
 
     private var arSession: Session? = null
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,6 +157,8 @@ class ArActivity : AppCompatActivity() {
             // Core.flip(mat.t(), mat, 0)
             Core.flip(mat_raw.t(), mat_raw, 1)
 
+            saveDebugImage(mat_raw, "1_raw")
+
             // Cut it to the focus size
             // The aspect ratio of the display (which shows the focus rectangle) and
             // the camera are generally not the same. The image is displayed by scaling the
@@ -156,25 +166,39 @@ class ArActivity : AppCompatActivity() {
             // longest side with the known focus percentage to compute how many pixels the
             // focus should be.
             val roi = Rect(Point((height - size) / 2, (width - size) / 2), Size(size, size))
-            val mat_processed = Mat(mat_raw, roi)
+            var mat_processed = Mat(mat_raw, roi)
+
+            saveDebugImage(mat_processed, "2_cropped")
 
             // Convert to rgb and threshold
             cvtColor(mat_processed, mat_processed, COLOR_BGR2GRAY)
+            saveDebugImage(mat_processed, "3_gray")
             threshold(mat_processed, mat_processed, 120.0, 255.0, THRESH_BINARY)
+            saveDebugImage(mat_processed, "4_binarized")
 
             // Erode / dilate to remove noise specks and close areas
-            val morph_size = 2.0
+            val morph_size = 1.0
             val morphKernel = getStructuringElement( MORPH_RECT, Size( 2*morph_size + 1, 2*morph_size+1 ),  Point( morph_size, morph_size ) )
 
             morphologyEx(mat_processed, mat_processed, MORPH_OPEN, morphKernel)
             morphologyEx(mat_processed, mat_processed, MORPH_CLOSE, morphKernel)
+            saveDebugImage(mat_processed, "5_morphed")
 
             // Detect contours
             val contours = ArrayList<MatOfPoint>()
             val hierarchy = Mat()
-            findContours(mat_processed, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE )
 
-            // Draw contours
+            // We need to invert the image, as Opencv wants white as foreground and black as background
+            val mat_inverted = Mat(size.toInt(), size.toInt(), mat_processed.type(), Scalar(255.0,255.0,255.0))
+            subtract(mat_inverted, mat_processed, mat_inverted);
+            findContours(mat_inverted, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE )
+
+            var min_x = size
+            var min_y = size
+            var max_x = 0.0
+            var max_y = 0.0
+
+            // Find the bounding box around all contours
             for (contour in contours) {
                 if (contourArea(contour) < 10 ) {
                     continue
@@ -186,18 +210,37 @@ class ArActivity : AppCompatActivity() {
                 val vertices = arrayOfNulls<Point>(4)
                 rect.points(vertices)
 
-                for (j in 0 until 4){
-                    line(mat_processed, vertices[j], vertices[(j+1)%4], Scalar(0.0,255.0,0.0))
+                for (j in vertices.indices){
+                    val vertex = vertices[j]!!
+                    min_x = min(vertex.x, min_x)
+                    min_y = min(vertex.y, min_y)
+                    max_x = max(vertex.x, max_x)
+                    max_y = max(vertex.y, max_y)
+                    // line(mat_processed, vertices[j], vertices[(j+1)%4], Scalar(0.0,255.0,0.0))
                 }
             }
+
+            if ( (max_x - min_x > 0) && (max_y - min_y > 0)) {
+                val center = Rect(Point(min_x, min_y), Point(max_x, max_y))
+                try {
+                    mat_processed = Mat(mat_processed, center)
+                } catch (e: Exception) {
+
+                }
+            }
+
+            val new_width = mat_processed.width()
+            val new_height = mat_processed.height()
 
             // We rotated the image, therefore height and width are swapped
             val bitmap_raw = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888 )
             Utils.matToBitmap(mat_raw, bitmap_raw)
 
-            val bitmap_processed = Bitmap.createBitmap(size.toInt(), size.toInt(), Bitmap.Config.ARGB_8888 )
+            val bitmap_processed = Bitmap.createBitmap(new_width, new_height, Bitmap.Config.ARGB_8888 )
             Utils.matToBitmap(mat_processed, bitmap_processed)
 
+            // We resize the image again to match the classifiers preferencs
+            resize( mat_processed, mat_processed, Size(64.0, 64.0) )
             val predictions = classifier.predict(mat_processed)
 
             // Display the previews
@@ -219,6 +262,14 @@ class ArActivity : AppCompatActivity() {
                     // placeObject(hit.createAnchor(), prediction[0].toString() )
                 }
             }
+        }
+    }
+
+    private fun saveDebugImage(mat: Mat, name: String) {
+        if (showDebug) {
+            val file = File(applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${name}.jpg")
+            Imgcodecs.imwrite(file.absolutePath, mat)
+            println("Saved to $file")
         }
     }
 
@@ -266,6 +317,10 @@ class ArActivity : AppCompatActivity() {
             .thenAccept {
                 addHanziToScene(anchor, it)
                 addHanziMenuToScene(anchor, hanzi)
+
+                doAsync {
+                    AppDatabase.getDatabase(applicationContext).hanziDao().markScanned(hanzi)
+                }
             }
             .exceptionally {
                 Toast.makeText(this, "Could not place model", Toast.LENGTH_SHORT).show()

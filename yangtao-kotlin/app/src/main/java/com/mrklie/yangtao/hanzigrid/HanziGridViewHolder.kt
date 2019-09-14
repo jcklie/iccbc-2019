@@ -18,7 +18,7 @@ class HanziGridViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         if (hanzi.scanned) {
             itemView.hanzi_detail_scanned.visibility = View.VISIBLE
         } else {
-            itemView.hanzi_detail_scanned.visibility = View.VISIBLE
+            itemView.hanzi_detail_scanned.visibility = View.INVISIBLE
         }
 
         itemView.setOnClickListener {

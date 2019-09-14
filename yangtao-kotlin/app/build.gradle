@@ -110,6 +110,9 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:1.14.0'
 
     implementation 'com.opencsv:opencsv:4.5'
+
+    implementation "io.noties.markwon:core:4.1.1"
+
 }
 
 250.times {

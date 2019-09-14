@@ -7,6 +7,9 @@ interface HanziDao {
     @Query("SELECT * FROM hanzi WHERE hanzi=:character")
     fun selectById(character: String): Hanzi
 
+    @Query("UPDATE hanzi SET scanned=1 WHERE hanzi=:character")
+    fun markScanned(character: String)
+
     @Query("SELECT * FROM hanzi")
     fun selectAll(): List<Hanzi>
 

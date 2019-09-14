@@ -17,5 +17,6 @@ data class Hanzi(
     @ColumnInfo(name = "phonetic") val phonetic: String,
     @ColumnInfo(name = "semantic") val semantic: String,
     @ColumnInfo(name = "mnemonic") val mnemonic: String,
+    @ColumnInfo(name = "etymology") val etymology: String,
     @ColumnInfo(name = "scanned") val scanned: Boolean = false
 ) : Parcelable

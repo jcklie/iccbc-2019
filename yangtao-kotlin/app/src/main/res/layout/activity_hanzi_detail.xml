@@ -95,11 +95,6 @@
             android:textSize="14sp"
             tools:text="Hints" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"></LinearLayout>
-
         <EditText
             android:id="@+id/hanzi_detail_mnemonic"
             android:layout_width="match_parent"
@@ -111,6 +106,15 @@
             android:layout_margin="16dp"
             tools:text="Mnemonic" />
 
+        <TextView
+            android:id="@+id/hanzi_detail_etymology"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:gravity="center_horizontal"
+            android:textSize="14sp"
+            android:layout_marginHorizontal="2dp"
+            tools:text="Etymology" />
     </LinearLayout>
 
 

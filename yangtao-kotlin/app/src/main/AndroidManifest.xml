@@ -29,7 +29,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.mrklie.yangtao.hanzigrid.HanziGridActivity" />
         </activity>
-        <activity android:name=".ar.ArActivity" />
+        <activity android:name=".ar.ArActivity"  android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".hanzigrid.HanziGridActivity"
             android:label="@string/app_name"

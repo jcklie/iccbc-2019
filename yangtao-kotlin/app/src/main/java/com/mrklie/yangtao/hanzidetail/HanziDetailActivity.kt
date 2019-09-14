@@ -12,6 +12,7 @@ import com.mrklie.yangtao.persistence.AppDatabase
 import com.mrklie.yangtao.persistence.Hanzi
 import com.mrklie.yangtao.util.getColorForHanzi
 import com.mrklie.yangtao.util.getTone
+import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_hanzi_detail.*
 import org.jetbrains.anko.doAsync
 
@@ -33,24 +34,30 @@ class HanziDetailActivity : AppCompatActivity() {
 
             runOnUiThread {
                 hanzi_detail_character.text = hanzi.character
-                hanzi_detail_pinyin.text = hanzi.pinyin
                 hanzi_detail_character.setTextColor(getColor(getColorForHanzi(hanzi.pinyin)))
+                hanzi_detail_pinyin.text = hanzi.pinyin
+                hanzi_detail_pinyin.setTextColor(getColor(getColorForHanzi(hanzi.pinyin)))
                 hanzi_detail_definition.text = hanzi.definition
                 hanzi_detail_decomposition.text = hanzi.decomposition
-
                 hanzi_detail_mnemonic.setText(hanzi.mnemonic)
 
+                val markwon = Markwon.create(applicationContext)
+                markwon.setMarkdown(hanzi_detail_etymology, hanzi.etymology)
 
                 if (hanzi.phonetic.isNotEmpty()) {
                     hanzi_detail_phonetic.text = "Phonetic: ${hanzi.phonetic}"
+                } else {
+                    hanzi_detail_phonetic.visibility = View.GONE
                 }
 
                 if (hanzi.semantic.isNotEmpty()) {
                     hanzi_detail_semantic.text = "Semantic: ${hanzi.semantic}"
+                } else {
+                    hanzi_detail_semantic.visibility = View.GONE
                 }
 
                 if (!hanzi.scanned) {
-                    hanzi_detail_scanned.visibility = View.INVISIBLE
+                    hanzi_detail_scanned.visibility = View.GONE
                 }
             }
         }
