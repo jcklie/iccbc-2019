@@ -126,11 +126,11 @@ def train_hog(path: Path):
 
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
-                  metrics=['accuracy'])
+                  metrics=['accuracy', tf.keras.metrics.TopKCategoricalAccuracy(10)])
 
     history = model.fit(x=df.X_train, y=y_train,
                         epochs=EPOCHS,
-                        verbose=1,
+                        verbose=2,
                         validation_data=(df.X_test, y_test),
                         callbacks=[earlystop_callback])
 
@@ -141,35 +141,6 @@ def train_hog(path: Path):
             f.write("\n")
 
 
-def visualize_predictions(path: Path):
-    model =  keras.models.load_model(PATH_DATARESULT_SPCCI_HOG)
-    df = load_hog(path)
-    y_test = tf.one_hot(df.y_test, len(df.labels_to_idx))
-
-    predicted_id = model.predict_classes(df.X_test)
-
-    font_name = "Noto Serif CJK SC"
-    matplotlib.rcParams['font.family'] = font_name
-    matplotlib.rcParams['axes.unicode_minus'] = False
-
-    k = 16 * 9
-    idx = np.random.choice(len(df.y_test), k)
-
-    plt.figure(figsize=(10, 9))
-    plt.subplots_adjust(hspace=0.5)
-    for n in range(k):
-        plt.subplot(16, 9, n + 1)
-        n = idx[n]
-        img = Image.open(df.path_test[n])
-        plt.imshow(img, cmap="gray")
-        color = "green" if predicted_id[n] == df.y_test[n] else "red"
-        plt.title(df.idx_to_label[predicted_id[n]], color=color)
-        plt.axis('off')
-    _ = plt.suptitle("Model predictions (green: correct, red: incorrect)")
-
-    plt.show()
-
-
 def main():
     setup_logging()
     # compute_hog(PATH_DATA_GENERATED_SPCCI_120_TRAIN, PATH_DATA_GENERATED_SPCCI_120_TEST, PATH_DATA_GENERATED_SPCCI_120_HOG)
@@ -177,8 +148,6 @@ def main():
 
     # train_hog(PATH_DATA_GENERATED_SPCCI_120_HOG)
     train_hog(PATH_DATA_GENERATED_SPCCI_280_HOG)
-
-    # visualize_predictions(PATH_DATA_GENERATED_SPCCI_280_HOG)
 
 
 if __name__ == '__main__':

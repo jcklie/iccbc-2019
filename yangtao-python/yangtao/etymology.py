@@ -1,11 +1,12 @@
 from collections import defaultdict
 from typing import Dict
 
-path = r"C:\Users\klie\Downloads\Etymological_Dictionary_of_Han_Chinese_Characters.txt"
+from yangtao.config import PATH_ETYMOLOGY
 
 
 def parse_etymology() -> Dict[str, str]:
-    with open(path, encoding="utf-8") as f:
+    """ Parses the Etymological Dictionary of Han/Chinese Characters by Lawrence J. Howell """
+    with open(PATH_ETYMOLOGY, encoding="utf-8") as f:
 
         buffer = defaultdict(list)
         for line in f:
@@ -24,7 +25,6 @@ def parse_etymology() -> Dict[str, str]:
         result = {}
         for k,v in buffer.items():
             result[k] = " ".join(v)
-            print(result[k])
 
     return result
 

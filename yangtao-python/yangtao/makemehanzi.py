@@ -1,9 +1,5 @@
 import json
-import logging
-from pathlib import Path
 from typing import List, Dict
-
-import wget
 
 import attr
 
@@ -11,7 +7,7 @@ import webcolors
 
 from yangtao.etymology import parse_etymology
 from yangtao.hanzi import get_most_frequent_characters
-from yangtao.util import setup_logging
+from yangtao.util import setup_logging, _download_file
 from yangtao.config import PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, PATH_DATA_SVG, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, \
     PATH_GENERATED_DICTIONARY
 
@@ -45,17 +41,8 @@ class DictionaryEntry:
         return cur[0]
 
 
-def _download_file(url: str, target_path: Path):
-    import ssl
-
-    if target_path.exists():
-        logging.info("File already exists: [%s]", str(target_path.resolve()))
-        return
-
-    wget.download(url, str(target_path.resolve()))
-
-
-def parse_dictionary():
+def parse_dictionary() -> Dict[str, DictionaryEntry]:
+    """ Parses the Makemeahanzi dictionary to a more usable format"""
     def _parse(tokens: List[str]):
         if len(tokens) == 0:
             return []
@@ -108,7 +95,6 @@ def parse_dictionary():
             line = f"{e.character}\t{e.pinyin}\t{e.definition}\t{e.decomposition}\t{e.origin}\t{e.phonetic}\t{e.semantic}\t{e.hint}\t{e.etymology}"
             f.write(line)
             f.write("\n")
-
 
     return result
 
@@ -189,7 +175,6 @@ def generate_svg(dictionary: Dict[str, DictionaryEntry]):
 
             with open(PATH_DATA_SVG / f"{character}.svg", "w") as f_out:
                 f_out.write(svg)
-
 
 
 if __name__ == '__main__':
