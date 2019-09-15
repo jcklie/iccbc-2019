@@ -1,14 +1,18 @@
 package com.mrklie.yangtao.hanzigrid
 
+import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.mrklie.yangtao.BuildConfig
 import com.mrklie.yangtao.ar.ArActivity
@@ -25,6 +29,7 @@ class HanziGridActivity : AppCompatActivity() {
 
     private val MIN_OPENGL_VERSION = 3.0
     private val TAG = HanziGridActivity::class.java.getSimpleName()
+    private val RECORD_REQUEST_CODE = 101
 
     lateinit var hanziGridRecyclerAdapter: HanziGridRecyclerAdapter
 
@@ -57,6 +62,19 @@ class HanziGridActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            RECORD_REQUEST_CODE -> {
+                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Needs camera permission to run!", Toast.LENGTH_SHORT).show()
+                    Log.i(TAG, "Permission has been denied by user")
+                } else {
+                    Log.i(TAG, "Permission has been granted by user")
+                }
+            }
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(com.mrklie.yangtao.R.menu.menu_main, menu)
@@ -81,6 +99,13 @@ class HanziGridActivity : AppCompatActivity() {
 
         if (!OpenCVLoader.initDebug()) {
             Toast.makeText(this, "Could not load OpenCV", Toast.LENGTH_SHORT).show()
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.CAMERA),
+                RECORD_REQUEST_CODE)
         }
     }
 
