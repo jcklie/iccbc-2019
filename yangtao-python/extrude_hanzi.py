@@ -4,9 +4,11 @@ import logging
 
 bpy.ops.object.delete(use_global=False)
 
-PATH_SVG_SOURCE = "svg"
-PATH_MODEL_TARGET = "models"
-PATH_LABELS = "labels.txt"
+PATH_SVG_SOURCE = os.path.join("data", "generated", "svg")
+PATH_MODEL_TARGET = os.path.join("data", "generated", "models")
+PATH_LABELS = os.path.join("data", "results", "labels.txt")
+
+os.makedirs(PATH_MODEL_TARGET, exist_ok=True)
 
 with open(PATH_LABELS) as f:
     labels = {x.strip() for x in f.readlines()}
