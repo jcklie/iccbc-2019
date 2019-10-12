@@ -11,6 +11,7 @@ import kotlinx.android.parcel.Parcelize
 data class Hanzi(
     @PrimaryKey @ColumnInfo(name = "hanzi") val character: String,
     @ColumnInfo(name = "pinyin") val pinyin: String,
+    @ColumnInfo(name = "pinyin_numbered") val pinyinNumbered: String,
     @ColumnInfo(name = "definition") val definition: String,
     @ColumnInfo(name = "decomposition") val decomposition: String,
     @ColumnInfo(name = "origin") val origin: String,

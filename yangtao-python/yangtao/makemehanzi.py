@@ -2,12 +2,13 @@ import json
 from typing import List, Dict
 
 import attr
+import pinyin as pyn
 
 import webcolors
 
 from yangtao.etymology import parse_etymology
 from yangtao.hanzi import get_most_frequent_characters
-from yangtao.util import setup_logging, _download_file
+from yangtao.util import setup_logging, download_file
 from yangtao.config import PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW, PATH_DATA_SVG, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, \
     PATH_GENERATED_DICTIONARY
 
@@ -19,6 +20,7 @@ _DICTIONARY_URL = "https://raw.githubusercontent.com/skishore/makemeahanzi/maste
 class DictionaryEntry:
     character: str = attr.ib()
     pinyin: str = attr.ib()
+    pinyin_numbered: str = attr.ib()
     definition: str = attr.ib()
     decomposition: str = attr.ib()
     origin: str = attr.ib()
@@ -69,6 +71,8 @@ def parse_dictionary() -> Dict[str, DictionaryEntry]:
             tree = _parse(list(obj["decomposition"]))
             character = obj["character"]
             pinyin = ", ".join(obj["pinyin"])
+            pinyin_numbered = pyn.get(character, format="numerical")
+
             definition = str(obj.get("definition", ""))
             decomposition = obj["decomposition"]
             origin = obj["etymology"]["type"] if "etymology" in obj else ""
@@ -83,7 +87,7 @@ def parse_dictionary() -> Dict[str, DictionaryEntry]:
                 semantic = ""
                 hint = ""
 
-            entry = DictionaryEntry(character, pinyin, definition, decomposition, origin, phonetic, semantic, hint, etymology, obj["matches"], tree)
+            entry = DictionaryEntry(character, pinyin, pinyin_numbered, definition, decomposition, origin, phonetic, semantic, hint, etymology, obj["matches"], tree)
             result[obj["character"]] = entry
 
     with open(PATH_GENERATED_DICTIONARY, "w", encoding="utf-8") as f:
@@ -92,7 +96,12 @@ def parse_dictionary() -> Dict[str, DictionaryEntry]:
             if e.character not in target:
                 continue
 
-            line = f"{e.character}\t{e.pinyin}\t{e.definition}\t{e.decomposition}\t{e.origin}\t{e.phonetic}\t{e.semantic}\t{e.hint}\t{e.etymology}"
+            fields = [
+                e.character, e.pinyin, e.pinyin_numbered, e.definition, e.decomposition, e.origin, e.phonetic, e.semantic, e.hint,
+                e.etymology
+            ]
+
+            line = "\t".join(fields)
             f.write(line)
             f.write("\n")
 
@@ -182,8 +191,8 @@ if __name__ == '__main__':
     PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW.parent.mkdir(parents=True, exist_ok=True)
     PATH_DATA_SVG.mkdir(parents=True, exist_ok=True)
 
-    _download_file(_SVG_URL, PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW)
-    _download_file(_DICTIONARY_URL, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY)
+    download_file(_SVG_URL, PATH_DATA_MAKE_ME_A_HANZI_SVG_RAW)
+    download_file(_DICTIONARY_URL, PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY)
 
     dictionary = parse_dictionary()
     generate_svg(dictionary)

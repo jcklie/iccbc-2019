@@ -317,6 +317,7 @@ class ArActivity : AppCompatActivity() {
             .thenAccept {
                 addHanziToScene(anchor, it)
                 addHanziMenuToScene(anchor, hanzi)
+                focusView.visibility = View.INVISIBLE
 
                 doAsync {
                     AppDatabase.getDatabase(applicationContext).hanziDao().markScanned(hanzi)
@@ -367,11 +368,13 @@ class ArActivity : AppCompatActivity() {
                     startActivity(HanziDetailActivity.newIntent(applicationContext, hanzi))
                     anchorNode.setParent(null)
                     anchor.detach()
+                    focusView.visibility = View.VISIBLE
                 }
 
                 cancelButton.setOnClickListener {
                     anchorNode.setParent(null)
                     anchor.detach()
+                    focusView.visibility = View.VISIBLE
                 }
 
                 // Place the node

@@ -6,4 +6,6 @@
     <string name="scan_dialog_yes">Correct</string>
     <string name="scan_dialog_no">Wrong</string>
     <string name="action_save_hanzi_details">Save</string>
+    <string name="action_play_pronunciation">Play</string>
+    <string name="mnemonic_placeholder">Enter your mnemonic…</string>
 </resources>

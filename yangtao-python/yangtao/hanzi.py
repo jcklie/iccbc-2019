@@ -2,13 +2,13 @@
 from typing import List
 
 from yangtao.config import PATH_DATA_CHARACTER_FREQUENCY, NUMBER_OF_CHARACTERS
-from yangtao.util import _download_file, setup_logging
+from yangtao.util import download_file, setup_logging
 
 
 def get_most_frequent_characters() -> List[str]:
     """Parses the list of most frequent characters and returns the first N as a list."""
     URL = r"https://pastebin.com/raw/vCB6K1M6"
-    _download_file(URL, PATH_DATA_CHARACTER_FREQUENCY)
+    download_file(URL, PATH_DATA_CHARACTER_FREQUENCY)
 
     # If this download does not work, dowload
     # https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexch/subtlexchchr.zip

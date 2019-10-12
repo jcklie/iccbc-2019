@@ -45,4 +45,7 @@ PATH_DATARESULT_SPCCI_HOG_LABELS: Path = PATH_DATA_RESULTS / "labels.txt"
 PATH_GENERATED_DICTIONARY = PATH_DATA_GENERATED / "dictionary.tsv"
 PATH_ETYMOLOGY = PATH_DATA_EXTERN / "Etymological_Dictionary_of_Han_Chinese_Characters.txt"
 
+PATH_AUDIO: Path = PATH_DATA_EXTERN / "audio"
+
+
 NUMBER_OF_CHARACTERS = 250

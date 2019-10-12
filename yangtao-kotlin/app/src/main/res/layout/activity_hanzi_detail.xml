@@ -102,9 +102,11 @@
             android:fontFamily="@font/noto_sans_bold"
             android:gravity="center_horizontal"
             android:textSize="25sp"
-            android:hint="Enter your mnemonic..."
+            android:hint="@string/mnemonic_placeholder"
             android:layout_margin="16dp"
-            tools:text="Mnemonic" />
+            tools:text="Mnemonic"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine" />
 
         <TextView
             android:id="@+id/hanzi_detail_etymology"
@@ -114,10 +116,11 @@
             android:gravity="center_horizontal"
             android:textSize="14sp"
             android:layout_marginHorizontal="2dp"
+            android:ellipsize="middle"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:fadeScrollbars="false"
+            android:maxLines="5"
             tools:text="Etymology" />
     </LinearLayout>
-
-
-
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

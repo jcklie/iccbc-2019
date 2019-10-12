@@ -2,6 +2,8 @@ package com.mrklie.yangtao.hanzidetail
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -11,10 +13,10 @@ import com.mrklie.yangtao.R
 import com.mrklie.yangtao.persistence.AppDatabase
 import com.mrklie.yangtao.persistence.Hanzi
 import com.mrklie.yangtao.util.getColorForHanzi
-import com.mrklie.yangtao.util.getTone
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_hanzi_detail.*
 import org.jetbrains.anko.doAsync
+
 
 class HanziDetailActivity : AppCompatActivity() {
 
@@ -74,9 +76,17 @@ class HanziDetailActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_play_pronunciation -> { playPronounciation(); true}
             R.id.action_save_hanzi_details -> { saveHanziDetails(); true}
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun playPronounciation() {
+        val uri = Uri.parse("android.resource://$packageName/raw/${hanzi.pinyinNumbered}")
+        val mp = MediaPlayer.create(this, uri)
+        mp.setOnCompletionListener { releaseInstance() }
+        mp.start()
     }
 
     private fun saveHanziDetails() {

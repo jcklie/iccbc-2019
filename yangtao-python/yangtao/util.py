@@ -9,11 +9,13 @@ def setup_logging():
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
 
-def _download_file(url: str, target_path: Path):
+def download_file(url: str, target_path: Path):
     import ssl
 
     if target_path.exists():
         logging.info("File already exists: [%s]", str(target_path.resolve()))
         return
+    else:
+        logging.info("Downloading: [%s]", str(target_path.resolve()))
 
     wget.download(url, str(target_path.resolve()))
