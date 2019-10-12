@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.DisplayMetrics
-import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -16,8 +15,6 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.ar.core.*
 import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.HitTestResult
-import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.ModelRenderable
@@ -35,7 +32,6 @@ import org.opencv.core.*
 import org.opencv.core.Core.subtract
 import org.opencv.core.Point
 import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import org.opencv.imgproc.Imgproc.*
 import java.io.File
 import java.lang.Exception
@@ -58,6 +54,7 @@ class ArActivity : AppCompatActivity() {
     private var displayWidth: Int? = 0
     private var displayHeight: Int? = 0
     private var showDebug: Boolean = false
+    private var allowVertical: Boolean = false
 
     private var arSession: Session? = null
 
@@ -93,6 +90,7 @@ class ArActivity : AppCompatActivity() {
 
         val SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         showDebug = SP.getBoolean("showDebug", false)
+        allowVertical = SP.getBoolean("allowVertical", false)
     }
 
     private fun initializeSession() {
@@ -111,6 +109,10 @@ class ArActivity : AppCompatActivity() {
             arConfig.focusMode = Config.FocusMode.AUTO
         }
         arConfig.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+
+        if (allowVertical) {
+            arConfig.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+        }
 
         arSession!!.configure(arConfig)
         arFragment.arSceneView!!.setupSession(arSession)
@@ -258,7 +260,7 @@ class ArActivity : AppCompatActivity() {
             for (hit in hits) {
                 val trackable = hit.trackable
                 if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
-                    placeScanDialog(hit.createAnchor(), predictions)
+                    placeScanDialog(hit.createAnchor(), predictions, trackable.type)
                     // placeObject(hit.createAnchor(), prediction[0].toString() )
                 }
             }
@@ -273,7 +275,7 @@ class ArActivity : AppCompatActivity() {
         }
     }
 
-    private fun placeScanDialog(anchor: Anchor, predictions: List<String>) {
+    private fun placeScanDialog(anchor: Anchor, predictions: List<String>, planeType: Plane.Type) {
         ViewRenderable.builder()
             .setView(this, R.layout.scan_dialog)
             .build()
@@ -290,12 +292,22 @@ class ArActivity : AppCompatActivity() {
 
                 // Create the node
                 val anchorNode = AnchorNode(anchor)
-                anchorNode.renderable = renderable
-                anchorNode.localScale = Vector3(0.2f, 0.2f, 0.2f)
+                TransformableNode(arFragment.transformationSystem).apply {
+                    setParent(anchorNode)
+                    if (planeType == Plane.Type.VERTICAL) {
+                        val firstRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), -90f)
+                        val secondRotation = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -90f)
+                        localRotation = Quaternion.multiply(firstRotation, secondRotation)
+                    }
 
+                    translationController.isEnabled = false
+                    localScale = Vector3(0.1f, 0.1f, 0.1f)
+                    this.renderable = renderable
+                }
+                
                 // Set listeners
                 yesButton.setOnClickListener {
-                    placeObject(anchor, spinner.selectedItem.toString())
+                    placeHanzi(anchor, spinner.selectedItem.toString(), planeType)
                     anchorNode.setParent(null)
                 }
 
@@ -308,15 +320,15 @@ class ArActivity : AppCompatActivity() {
             }
     }
 
-    private fun placeObject(anchor: Anchor, hanzi: String) {
+    private fun placeHanzi(anchor: Anchor, hanzi: String, planeType: Plane.Type) {
         val modelName = "models/hanzi${classifier.labelToIndex(hanzi)}.sfb"
         ModelRenderable.builder()
             .setSource(this, Uri.parse(modelName))
             .setRegistryId(hanzi)
             .build()
             .thenAccept {
-                addHanziToScene(anchor, it)
-                addHanziMenuToScene(anchor, hanzi)
+                addHanziToScene(anchor, it, planeType)
+                addHanziMenuToScene(anchor, hanzi, planeType)
                 focusView.visibility = View.INVISIBLE
 
                 doAsync {
@@ -329,13 +341,20 @@ class ArActivity : AppCompatActivity() {
             }
     }
 
-    private fun addHanziToScene(anchor: Anchor, model: ModelRenderable) {
+    private fun addHanziToScene(anchor: Anchor, model: ModelRenderable, planeType: Plane.Type) {
         val anchorNode = AnchorNode(anchor)
         TransformableNode(arFragment.transformationSystem).apply {
             setParent(anchorNode)
-            val firstRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), -90f)
-            val secondRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), 180f)
-            localRotation = Quaternion.multiply(firstRotation, secondRotation)
+            localRotation = if (planeType == Plane.Type.VERTICAL) {
+                Quaternion.axisAngle(Vector3(0f, 1f, 0f), 90f)
+                // val secondRotation = Quaternion.axisAngle(Vector3(0f, 1f, 0f), 0f)
+                // Quaternion.multiply(firstRotation, secondRotation)
+            } else {
+                val firstRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), -90f)
+                val secondRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), 180f)
+                Quaternion.multiply(firstRotation, secondRotation)
+            }
+
             translationController.isEnabled = false
             renderable = model
             select()
@@ -344,7 +363,7 @@ class ArActivity : AppCompatActivity() {
         arFragment.arSceneView.scene.addChild(anchorNode)
     }
 
-    private fun addHanziMenuToScene(anchor: Anchor, hanzi: String) {
+    private fun addHanziMenuToScene(anchor: Anchor, hanzi: String, planeType: Plane.Type) {
         ViewRenderable.builder()
             .setView(this, R.layout.scan_menu)
             .build()
@@ -357,11 +376,28 @@ class ArActivity : AppCompatActivity() {
                 val cancelButton = view.findViewById<ImageButton>(R.id.scan_menu_delete)
 
                 // Create the node
-                val pose = Pose.makeTranslation(floatArrayOf(0.0f, 0.15f, 0.0f))
+                val pose = if (planeType == Plane.Type.VERTICAL) {
+                    Pose.makeTranslation(floatArrayOf(0.15f, 0.0f, 0.0f))
+                } else {
+                    Pose.makeTranslation(floatArrayOf(0.0f, 0.15f, 0.0f))
+                }
+
                 val newAnchor = arSession!!.createAnchor(anchor.pose.compose(pose))
                 val anchorNode = AnchorNode(newAnchor)
-                anchorNode.renderable = viewRenderable
-                anchorNode.localScale = Vector3(0.2f, 0.2f, 0.2f)
+                TransformableNode(arFragment.transformationSystem).apply {
+                    setParent(anchorNode)
+                    if (planeType == Plane.Type.VERTICAL) {
+                        val firstRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), -90f)
+                        val secondRotation = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -90f)
+                        localRotation = Quaternion.multiply(firstRotation, secondRotation)
+                        localScale = Vector3(0.05f, 0.05f, 0.05f)
+                    } else {
+                        localScale = Vector3(0.05f, 0.05f, 0.05f)
+                    }
+
+                    translationController.isEnabled = false
+                    renderable = viewRenderable
+                }
 
                 // Set listeners
                 infoButton.setOnClickListener {

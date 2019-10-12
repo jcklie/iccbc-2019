@@ -5,4 +5,8 @@
         app:key="showDebug"
         app:title="Enable debug views"/>
 
+    <SwitchPreferenceCompat
+        app:key="allowVertical"
+        app:title="Allows scanning vertical planes"/>
+
 </PreferenceScreen>
