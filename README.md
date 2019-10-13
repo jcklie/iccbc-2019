@@ -8,15 +8,20 @@
 
 ## Screenshots
 
-<figure class="image">
+<p float="left">
+
+
+<figure class="image" width="200">
   <img src="img/grid.png" alt="Grid View">
   <figcaption>The collection shows characters that can be scanned or already scanned (marked by a star)</figcaption>
 </figure>
 
-<figure class="image">
+<figure class="image" width="200">
   <img src="img/detail_yang.png" alt="Detail Screen">
   <figcaption>The detail view shows information regarding pronuncia#on, meaning, decompositon, etymology and user-defined mnemonic.</figcaption>
 </figure>
+
+</p>
 
 <figure class="image">
   <img src="img/prescan.png" alt="Scanning character">
