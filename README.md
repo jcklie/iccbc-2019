@@ -7,13 +7,10 @@
 ## Screenshots
 
 | ![Grid View](img/grid.png)  | ![Detail Screen](img/detail_yang.png) |
-| :--: | :--: |
 |  The collection shows characters that can be scanned or already scanned (marked by a star) | The detail view shows information regarding pronunciation, meaning, decompositon, etymology and user-defined mnemonic. | 
 | ![Scanning character](img/prescan.png) | ![Scanning character](img/scan_dialog.png) |
-| :--: | :--: |
 |  In the AR view, characters can be scanned so that they appear in 3D. | After scanning a character, the user has the choices to either accept it as correct, wrong, or choose one of the 10 predictions instead. |
 | ![Scanned character](img/scan.png) | |
-| :--: | |
 |  The augmented reality view allows users to scan and then explore characters in 3D. Clicking on the info sign leads the user to the details view. | |
 
 ## Motivation
