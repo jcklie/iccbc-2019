@@ -4,7 +4,7 @@
 
 *yáng táo* (杨桃) is an augmented reality app for learning Chinese characters. It was developed for the [2019 International Collegiate Competition for Brain-inspired Computing（ICCBC 2019](https://contest.cbicr.org/en/index.php?catid=1). We were ranked in the top 16 and participated in the finals in Tsinghua University, Beijing, China. The idea is to combine many different cues to better remember Hanzi, e.g. etymology, radicals, pronounciation, mnemonics. For more information, please consult our [Technical Document](img/0048-Yangtao-TUD_THU-TechnicalDocumentation.pdf) or [watch our video](https://youtu.be/3IBDXE0ZM14)!
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/3IBDXE0ZM14" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Yangtao: AR App for Interactively Learning and Exploring Chinese Characters](http://img.youtube.com/vi/3IBDXE0ZM14/0.jpg)](http://www.youtube.com/watch?v=3IBDXE0ZM14 "Yangtao: AR App for Interactively Learning and Exploring Chinese Characters")
 
 ## Screenshots
 
