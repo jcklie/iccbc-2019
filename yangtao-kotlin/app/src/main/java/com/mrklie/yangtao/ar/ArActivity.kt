@@ -95,11 +95,9 @@ class ArActivity : AppCompatActivity() {
 
     private fun initializeSession() {
         // Register scene update to show focus view once tracking is done
-        arFragment.arSceneView.scene.addOnUpdateListener { frameTime ->
-            // handleFocusView()
-
-            //focusView.visibility = View.VISIBLE
-        }
+        // arFragment.arSceneView.scene.addOnUpdateListener { frameTime ->
+        //    handleFocusView()
+        //}
 
         arSession = Session(this, EnumSet.of(Session.Feature.SHARED_CAMERA))
         val arConfig = Config(arSession)
@@ -119,15 +117,15 @@ class ArActivity : AppCompatActivity() {
     }
 
     private fun handleFocusView() {
-        // https://github.com/google-ar/sceneform-android-sdk/issues/68#issuecomment-394813418
         for (plane in arSession!!.getAllTrackables(Plane::class.java)) {
-            if (plane.trackingState == TrackingState.TRACKING) {
-
+            if (plane.trackingState == TrackingState.TRACKING ) {
+                focusView.visibility = View.INVISIBLE
+                return
             }
         }
 
         // If there are no planes to track, then hide the view
-        focusView.visibility = View.INVISIBLE
+        focusView.visibility = View.VISIBLE
     }
 
     private fun resizeFocusView() {
@@ -292,6 +290,8 @@ class ArActivity : AppCompatActivity() {
 
                 // Create the node
                 val anchorNode = AnchorNode(anchor)
+                anchorNode.localScale = Vector3(0.2f, 0.2f, 0.2f)
+
                 TransformableNode(arFragment.transformationSystem).apply {
                     setParent(anchorNode)
                     if (planeType == Plane.Type.VERTICAL) {
@@ -301,10 +301,9 @@ class ArActivity : AppCompatActivity() {
                     }
 
                     translationController.isEnabled = false
-                    localScale = Vector3(0.1f, 0.1f, 0.1f)
                     this.renderable = renderable
                 }
-                
+
                 // Set listeners
                 yesButton.setOnClickListener {
                     placeHanzi(anchor, spinner.selectedItem.toString(), planeType)
@@ -343,6 +342,8 @@ class ArActivity : AppCompatActivity() {
 
     private fun addHanziToScene(anchor: Anchor, model: ModelRenderable, planeType: Plane.Type) {
         val anchorNode = AnchorNode(anchor)
+        anchorNode.localScale = Vector3(0.1f, 0.1f, 0.1f)
+
         TransformableNode(arFragment.transformationSystem).apply {
             setParent(anchorNode)
             localRotation = if (planeType == Plane.Type.VERTICAL) {
@@ -384,15 +385,14 @@ class ArActivity : AppCompatActivity() {
 
                 val newAnchor = arSession!!.createAnchor(anchor.pose.compose(pose))
                 val anchorNode = AnchorNode(newAnchor)
+                anchorNode.localScale = Vector3(0.05f, 0.05f, 0.05f)
+
                 TransformableNode(arFragment.transformationSystem).apply {
                     setParent(anchorNode)
                     if (planeType == Plane.Type.VERTICAL) {
                         val firstRotation = Quaternion.axisAngle(Vector3(0f, 0f, 1f), -90f)
                         val secondRotation = Quaternion.axisAngle(Vector3(0f, 1f, 0f), -90f)
                         localRotation = Quaternion.multiply(firstRotation, secondRotation)
-                        localScale = Vector3(0.05f, 0.05f, 0.05f)
-                    } else {
-                        localScale = Vector3(0.05f, 0.05f, 0.05f)
                     }
 
                     translationController.isEnabled = false
