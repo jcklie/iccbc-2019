@@ -2,7 +2,9 @@
 
 <img align="left" src="img/yangtao_logo_small.png" style="margin: 20px">
 
-*yáng táo* (杨桃) is an augmented reality app for learning Chinese characters. It was developed for the [2019 International Collegiate Competition for Brain-inspired Computing（ICCBC 2019](https://contest.cbicr.org/en/index.php?catid=1). We were ranked in the top 16 and participated in the finals in Tsinghua University, Beijing, China. The idea is to combine many different cues to better remember Hanzi, e.g. etymology, radicals, pronounciation, mnemonics, ...
+*yáng táo* (杨桃) is an augmented reality app for learning Chinese characters. It was developed for the [2019 International Collegiate Competition for Brain-inspired Computing（ICCBC 2019](https://contest.cbicr.org/en/index.php?catid=1). We were ranked in the top 16 and participated in the finals in Tsinghua University, Beijing, China. The idea is to combine many different cues to better remember Hanzi, e.g. etymology, radicals, pronounciation, mnemonics. For more information, please consult our [Technical Document](img/0048-Yangtao-TUD_THU-TechnicalDocumentation.pdf) or [watch our video](https://youtu.be/3IBDXE0ZM14)!
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3IBDXE0ZM14" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Screenshots
 
@@ -47,6 +49,23 @@ shadows, noisy background or only partially capturing the Hanzi. In the main vie
 menue in the top right can be used to activate the debug view. It shows more information during
 scanning about how the app processes the image.
 
+## Included characters
 
+We use the 250 most common characters mostly based on *Cai and Brysbaert 2010*. They are
+
+    一三上下不与世业东两个中为主么义之也了事二于些产人什从他代以们件任会但位体何作
+    你使信做儿先入全公关其内再军几出分利别到制前力加务动化十原去又及反发受变口只可
+    各合同名后向员和四回因国在地场声处外多大天太头女她好如子学它安定实家对将小少尔
+    就工己已常平年并应度建开当很得心必性总情想意感成我或战所手才打把报接提政教数文
+    斯新方无日时明是更最月有本机条来果样次正此比民气水没法活海点然物特现理生用由电
+    的目相看真着知神种立第等系经结给美老者而能自行表被西要见解认论话说走起身过还这
+    进通道那部都里重量长门问间面题高
+
+## Acknowledgements
+
+1. We use SVG and dictionary from [MakeMeAHanzi](https://github.com/skishore/makemeahanzi)
+2. We use the SCUT-SPCCI Hanzi images created by the [Group of Lianwen Jin of South China
+University of Technology](http://www.hcii-lab.net/data/scutspcci/download.html) as training data for the character classifier
+3. We use [The dictionary Etymological Dictionary of Han/Chinese Characters by Lawrence J. Howell](http://nihongo.monash.edu/Etymological_Dictionary_of_Han_Chinese_Characters.pdf)
 
 
