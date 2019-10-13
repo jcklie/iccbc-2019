@@ -1,26 +1,20 @@
 # Yangtao
 
-
 <img align="left" src="img/yangtao_logo_small.png" style="margin: 20px">
 
-
 *yáng táo* (杨桃) is an augmented reality app for learning Chinese characters. It was developed for the [2019 International Collegiate Competition for Brain-inspired Computing（ICCBC 2019](https://contest.cbicr.org/en/index.php?catid=1). We were ranked in the top 16 and participated in the finals in Tsinghua University, Beijing, China. The idea is to combine many different cues to better remember Hanzi, e.g. etymology, radicals, pronounciation, mnemonics, ...
-
-<br />
 
 ## Screenshots
 
 | ![Grid View](img/grid.png)  | ![Detail Screen](img/detail_yang.png) |
 | :--: | :--: |
-  The collection shows characters that can be scanned or already scanned (marked by a star) | The detail view shows information regarding pronuncia#on, meaning, decompositon, etymology and user-defined mnemonic. | 
+|  The collection shows characters that can be scanned or already scanned (marked by a star) | The detail view shows information regarding pronunciation, meaning, decompositon, etymology and user-defined mnemonic. | 
 | ![Scanning character](img/prescan.png) | ![Scanning character](img/scan_dialog.png) |
 | :--: | :--: |
-  In the AR view, characters can be scanned so that they appear in 3D. | After scanning a character, the user has the choices to either accept it as correct, wrong, or choose one of the 10 predictions instead. |
+|  In the AR view, characters can be scanned so that they appear in 3D. | After scanning a character, the user has the choices to either accept it as correct, wrong, or choose one of the 10 predictions instead. |
 | ![Scanned character](img/scan.png) | |
 | :--: | |
-  The augmented reality view allows users to scan and then explore characters in 3D. Clicking on the info sign leads the user to the details view. | |
-
-
+|  The augmented reality view allows users to scan and then explore characters in 3D. Clicking on the info sign leads the user to the details view. | |
 
 ## Motivation
 
