@@ -1,5 +1,5 @@
-<PreferenceScreen
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <SwitchPreferenceCompat
         app:key="showDebug"
@@ -8,5 +8,11 @@
     <SwitchPreferenceCompat
         app:key="allowVertical"
         app:title="Allows scanning vertical planes"/>
+
+    <SeekBarPreference
+        app:key="focusViewPercentage"
+        android:max="40"
+        android:defaultValue="25"
+        app:title="Sets how large the camera focus in the AR view is"/>
 
 </PreferenceScreen>

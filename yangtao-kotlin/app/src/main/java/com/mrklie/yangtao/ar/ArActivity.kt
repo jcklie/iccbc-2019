@@ -55,6 +55,7 @@ class ArActivity : AppCompatActivity() {
     private var displayHeight: Int? = 0
     private var showDebug: Boolean = false
     private var allowVertical: Boolean = false
+    private var focusViewPercentage: Double = 0.25
 
     private var arSession: Session? = null
 
@@ -68,7 +69,7 @@ class ArActivity : AppCompatActivity() {
         focusView = findViewById(R.id.ar_focus)
 
         scanButton = findViewById(R.id.ar_scan_button)
-        scanButton.setOnClickListener { view ->
+        scanButton.setOnClickListener {
             scanImage()
         }
 
@@ -84,13 +85,14 @@ class ArActivity : AppCompatActivity() {
         // Shared Camera
         // createCameraCaptureSession()
 
-        resizeFocusView()
-
         classifier = HanziClassifier(applicationContext, "model.tflite", "labels.txt")
 
         val SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         showDebug = SP.getBoolean("showDebug", false)
         allowVertical = SP.getBoolean("allowVertical", false)
+        focusViewPercentage = SP.getInt("focusViewPercentage", 25) / 100.0
+
+        resizeFocusView()
     }
 
     private fun initializeSession() {
@@ -130,7 +132,7 @@ class ArActivity : AppCompatActivity() {
 
     private fun resizeFocusView() {
         val longestSide = max(displayWidth!!, displayHeight!!)
-        val focusSize = (longestSide * FOCUS_VIEW_PERCENTAGE).toInt()
+        val focusSize = (longestSide * focusViewPercentage).toInt()
 
         val params = focusView.layoutParams
         params.width = focusSize
@@ -149,7 +151,7 @@ class ArActivity : AppCompatActivity() {
             val width = image.width
             val height = image.height
             val longestSide = max(width, image.height)
-            val size = longestSide * FOCUS_VIEW_PERCENTAGE
+            val size = longestSide * focusViewPercentage
 
             val mat_raw = Yuv.rgb(image)
 
@@ -342,7 +344,7 @@ class ArActivity : AppCompatActivity() {
 
     private fun addHanziToScene(anchor: Anchor, model: ModelRenderable, planeType: Plane.Type) {
         val anchorNode = AnchorNode(anchor)
-        anchorNode.localScale = Vector3(0.1f, 0.1f, 0.1f)
+        anchorNode.localScale = Vector3(0.5f, 0.5f, 0.5f)
 
         TransformableNode(arFragment.transformationSystem).apply {
             setParent(anchorNode)
@@ -378,14 +380,14 @@ class ArActivity : AppCompatActivity() {
 
                 // Create the node
                 val pose = if (planeType == Plane.Type.VERTICAL) {
-                    Pose.makeTranslation(floatArrayOf(0.15f, 0.0f, 0.0f))
+                    Pose.makeTranslation(floatArrayOf(0.1f, 0.0f, 0.0f))
                 } else {
-                    Pose.makeTranslation(floatArrayOf(0.0f, 0.15f, 0.0f))
+                    Pose.makeTranslation(floatArrayOf(0.0f, 0.1f, 0.0f))
                 }
 
                 val newAnchor = arSession!!.createAnchor(anchor.pose.compose(pose))
                 val anchorNode = AnchorNode(newAnchor)
-                anchorNode.localScale = Vector3(0.05f, 0.05f, 0.05f)
+                anchorNode.localScale = Vector3(0.15f, 0.15f, 0.15f)
 
                 TransformableNode(arFragment.transformationSystem).apply {
                     setParent(anchorNode)
@@ -420,7 +422,6 @@ class ArActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = ArActivity::class.qualifiedName
-        private val FOCUS_VIEW_PERCENTAGE = 0.25
 
         fun newIntent(context: Context): Intent {
             return Intent(context, ArActivity::class.java)

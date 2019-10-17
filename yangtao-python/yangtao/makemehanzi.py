@@ -5,6 +5,7 @@ import attr
 import pinyin as pyn
 
 import webcolors
+from hanziconv import HanziConv
 
 from yangtao.etymology import parse_etymology
 from yangtao.hanzi import get_most_frequent_characters
@@ -19,6 +20,7 @@ _DICTIONARY_URL = "https://raw.githubusercontent.com/skishore/makemeahanzi/maste
 @attr.s
 class DictionaryEntry:
     character: str = attr.ib()
+    traditional: str = attr.ib()
     pinyin: str = attr.ib()
     pinyin_numbered: str = attr.ib()
     definition: str = attr.ib()
@@ -65,18 +67,25 @@ def parse_dictionary() -> Dict[str, DictionaryEntry]:
 
     result = {}
     etymology_dict = parse_etymology()
-    with open(PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY, encoding="utf-8") as f:
+    with PATH_DATA_MAKE_ME_A_HANZI_DICTIONARY.open(encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
             tree = _parse(list(obj["decomposition"]))
             character = obj["character"]
+            traditional = HanziConv.toTraditional(character)
             pinyin = ", ".join(obj["pinyin"])
             pinyin_numbered = pyn.get(character, format="numerical")
 
             definition = str(obj.get("definition", ""))
             decomposition = obj["decomposition"]
             origin = obj["etymology"]["type"] if "etymology" in obj else ""
-            etymology = etymology_dict.get(character, "")
+
+            if character in etymology_dict:
+                etymology = etymology_dict[character]
+            elif traditional in etymology_dict:
+                etymology = etymology_dict[traditional]
+            else:
+                etymology = ""
 
             if "etymology" in obj:
                 phonetic = obj["etymology"]["phonetic"] if "phonetic" in obj["etymology"] else ""
@@ -87,17 +96,17 @@ def parse_dictionary() -> Dict[str, DictionaryEntry]:
                 semantic = ""
                 hint = ""
 
-            entry = DictionaryEntry(character, pinyin, pinyin_numbered, definition, decomposition, origin, phonetic, semantic, hint, etymology, obj["matches"], tree)
+            entry = DictionaryEntry(character, traditional, pinyin, pinyin_numbered, definition, decomposition, origin, phonetic, semantic, hint, etymology, obj["matches"], tree)
             result[obj["character"]] = entry
 
-    with open(PATH_GENERATED_DICTIONARY, "w", encoding="utf-8") as f:
+    with PATH_GENERATED_DICTIONARY.open("w", encoding="utf-8") as f:
         target = set(get_most_frequent_characters())
         for e in result.values():
             if e.character not in target:
                 continue
 
             fields = [
-                e.character, e.pinyin, e.pinyin_numbered, e.definition, e.decomposition, e.origin, e.phonetic, e.semantic, e.hint,
+                e.character, e.traditional, e.pinyin, e.pinyin_numbered, e.definition, e.decomposition, e.origin, e.phonetic, e.semantic, e.hint,
                 e.etymology
             ]
 

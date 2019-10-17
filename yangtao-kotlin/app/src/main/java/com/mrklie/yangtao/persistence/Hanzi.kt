@@ -10,6 +10,7 @@ import kotlinx.android.parcel.Parcelize
 @Entity(tableName = "hanzi")
 data class Hanzi(
     @PrimaryKey @ColumnInfo(name = "hanzi") val character: String,
+    @ColumnInfo(name = "traditional") val traditional: String,
     @ColumnInfo(name = "pinyin") val pinyin: String,
     @ColumnInfo(name = "pinyin_numbered") val pinyinNumbered: String,
     @ColumnInfo(name = "definition") val definition: String,
